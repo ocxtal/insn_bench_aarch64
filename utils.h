@@ -431,7 +431,7 @@ public:
 		size_t const &_xconst = 17,
 		uint8_t const &_vseed = 1,
 		uint8_t const &_vconst = 17
-	) : bench(_freq, (size_t const)_xseed, _xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst)) {
+	) : bench(_freq, (size_t)_xseed, _xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst)) {
 	}
 
 	/* prologue and epilogue */
