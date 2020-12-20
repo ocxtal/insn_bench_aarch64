@@ -6,13 +6,21 @@
  */
 #include <stdio.h>
 #include "utils.h"
+#include "ldst.h"
+#include "alu.h"
 
 int main(void) {
 
-	printf("warming up. measuring CPU frequency, assuming latency of 64bit addition is %zu cycle(s)...\n", ADD_LATENCY_CYCLES);
+	printf("# measuring CPU frequency, assuming latency of 64bit addition is %zu cycle(s)...\n", ADD_LATENCY_CYCLES);
 	double const freq = estimate_cpu_freq();
-	printf("estimated CPU frequency: %.2f MHz\n", freq / 1000000.0);
+	printf("# estimated CPU frequency: %.2f MHz\n", freq / 1000000.0);
 
+	printf("# measuring load / store latencies...\n");
+	bench_load(freq);
+	bench_store(freq);
+
+	printf("# measuring arithmetic and logic instruction latencies...\n");
+	bench_alu(freq);
 	return(0);
 }
 
