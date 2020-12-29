@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <functional>
 #include <arm_neon.h>
 #include "xbyak_aarch64.h"
 
@@ -32,356 +33,229 @@ using namespace Xbyak_aarch64;
 	end - start; \
 })
 
-/*
- * I assume the processor has 1 cycle latency for 64bit add.
- */
-#define ADD_LATENCY_CYCLES		( (size_t)1 )
-
-/*
- * estimate CPU frequency from a sequence of adds. it assumes the processor
- * does not scale the frequency. otherwise the result becomes unreliable.
- */
-static inline
-double estimate_cpu_freq_core(void) {
-	size_t const start = read_clock_nsec();
-	size_t const cnt = 4 * 1024 * 1024;
-	size_t acc = 0, i = cnt;
-
-	/* do 256 adds. I assume reg-reg latency of a 64bit add operation is 1 cycle. */
-	__asm__ volatile ("\n\
-	1: \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		# 16 adds \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		add %0, %0, #1 \n\
-		subs %1, %1, #1 \n\
-		b.ne 1b"
-		: "+r"(acc), "+r"(i)
-		:
-		:
-	);
-	size_t const end = read_clock_nsec();
-	return((double)acc / (double)(end - start) * 1000000000.0);
-}
-
-static inline
-double estimate_cpu_freq(void) {
-	double r = 0.0;
-	for(size_t i = 0; i < 3; i++) {
-		r = estimate_cpu_freq_core();
-	}
-	return(r);
-}
-
-
-typedef void (*op_t)(
-	CodeGenerator *g,
-	XReg xd, XReg xs, XReg xc,
-	WReg wd, WReg ws, WReg wc,
-	VReg vd, VReg vs, VReg vc,
-	Label l
-);
-#define op(_body) ( []( \
-	CodeGenerator *g, \
-	XReg xd, XReg xs, XReg xc, \
-	WReg wd, WReg ws, WReg wc, \
-	VReg vd, VReg vs, VReg vc, \
-	Label l \
-) { \
-	(void)xd; (void)xs; (void)xc; \
-	(void)wd; (void)ws; (void)wc; \
-	(void)vd; (void)vs; (void)vc; \
-	(void)l; \
-	_body; \
-} )
-
-
 /* result returned in this */
 struct measure_t {
 	double lat;
-	double rct;		/* reciprocal throughput */
+	double thr;		/* reciprocal throughput */
 };
 
 /* printer */
 static
 void print(char const *name, measure_t c) {
+	#ifdef SCAN_PARAMS
+	(void)name; (void)c;
+
+	#else
 	if(c.lat == 0.0) {
-		printf("%s\t-\t%.2f\n", name, c.rct);
-	} else if(c.rct == 0.0) {
+		printf("%s\t-\t%.2f\n", name, c.thr);
+	} else if(c.thr == 0.0) {
 		printf("%s\t%.2f\t-\n", name, c.lat);
 	} else {
-		printf("%s\t%.2f\t%.2f\n", name, c.lat, c.rct);
+		printf("%s\t%.2f\t%.2f\n", name, c.lat, c.thr);
 	}
+	#endif
+
+	return;
 }
 
+/*
+ * register bundle
+ */
+class AReg {
+public:
+	AReg(
+		WReg const &_w,
+		XReg const &_x,
+		VReg const &_v,
+		BReg const &_b,
+		HReg const &_h,
+		SReg const &_s,
+		DReg const &_d,
+		QReg const &_q
+	) : w(_w), x(_x), v(_v), b(_b), h(_h), s(_s), d(_d), q(_q) {
+	}
+	WReg const w;
+	XReg const x;
+	VReg const v;
+	BReg const b;
+	HReg const h;
+	SReg const s;
+	DReg const d;
+	QReg const q;
+};
+
+/* op generation function template and helper */
+// typedef void (*op_t)(CodeGenerator *g, AReg const *r);
+typedef std::function<void (CodeGenerator *, AReg const *, AReg const *)> op_t;
+#define op(_body)		( [](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
+#define op_cap(_body)	( [=](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
+
+/*
+ * parameter scanning util
+ */
+#ifdef SCAN_PARAMS
+#  define both(_b, ...)		(_b).both_(__LINE__, __VA_ARGS__)
+#  define lat(_b, ...)		(_b).lat_(__LINE__, __VA_ARGS__)
+#  define thr(_b, ...)		(_b).thr_(__LINE__, __VA_ARGS__)
+#else
+#  define both(_b, ...)		(_b).both_(0, __VA_ARGS__)
+#  define lat(_b, ...)		(_b).lat_(0, __VA_ARGS__)
+#  define thr(_b, ...)		(_b).thr_(0, __VA_ARGS__)
+#endif
+
+/*
+ * issue pattern configurator
+ */
+typedef struct {
+	size_t count;
+	size_t pitch;
+	size_t offset;
+	size_t mod;
+} pattern_t;
+
+static pattern_t const lat_inc[] = {
+	{ 5, 0, 0, 0 },
+	{ 24, 1, 1, 24 },
+	{ 0, 0, 0, 0 }
+};
+static pattern_t const lat_flat[] = {
+	{ 144, 1, 1, 24 },
+	{ 0, 0, 0, 0 }
+};
+static pattern_t const *lat_patterns[] = {
+	(pattern_t const *)&lat_flat,
+	(pattern_t const *)&lat_inc,
+	NULL
+};
+
+#define table_thr(_w, _x, _y, _z) { \
+	{ (_z), 0, 0, 0 }, \
+	{ (_x), (_w), 0, 0 }, \
+	{ (_y), 0, 0, 0 }, \
+	{ (_w), 1, 0, (_w) * (_x) }, \
+	{ 0, 0, 0, 0 } \
+}
+#define dec_thr(_w, _x, _y, _z)		static pattern_t const thr_##_w##_##_x##_##_y##_##_z[] = table_thr(_w, _x, _y, _z)
+#define ptr_thr(_w, _x, _y, _z) 	(pattern_t const *)&( thr_##_w##_##_x##_##_y##_##_z )
+
+#ifdef SCAN_PARAMS
+dec_thr(3, 8, 1, 120);
+dec_thr(4, 7, 1, 120);
+dec_thr(5, 5, 1, 120);
+dec_thr(6, 4, 1, 120);
+dec_thr(7, 4, 1, 120);
+dec_thr(8, 3, 1, 120);
+dec_thr(9, 3, 1, 120);
+dec_thr(3, 8, 2, 60);
+dec_thr(4, 7, 2, 60);
+dec_thr(5, 5, 2, 60);
+dec_thr(6, 4, 2, 60);
+dec_thr(7, 4, 2, 60);
+dec_thr(8, 3, 2, 60);
+dec_thr(9, 3, 2, 60);
+dec_thr(3, 8, 3, 40);
+dec_thr(4, 7, 3, 40);
+dec_thr(5, 5, 3, 40);
+dec_thr(6, 4, 3, 40);
+dec_thr(7, 4, 3, 40);
+dec_thr(8, 3, 3, 40);
+dec_thr(9, 3, 3, 40);
+dec_thr(3, 8, 4, 30);
+dec_thr(4, 7, 4, 30);
+dec_thr(5, 5, 4, 30);
+dec_thr(6, 4, 4, 30);
+dec_thr(7, 4, 4, 30);
+dec_thr(8, 3, 4, 30);
+dec_thr(9, 3, 4, 30);
+dec_thr(3, 8, 5, 30);
+dec_thr(4, 7, 5, 30);
+dec_thr(5, 5, 5, 30);
+dec_thr(6, 4, 5, 30);
+dec_thr(7, 4, 5, 30);
+dec_thr(8, 3, 5, 30);
+dec_thr(9, 3, 5, 30);
+dec_thr(3, 8, 6, 20);
+dec_thr(4, 7, 6, 20);
+dec_thr(5, 5, 6, 20);
+dec_thr(6, 4, 6, 20);
+dec_thr(7, 4, 6, 20);
+dec_thr(8, 3, 6, 20);
+dec_thr(9, 3, 6, 20);
+#else
+dec_thr(9, 3, 1, 120);
+dec_thr(6, 4, 3, 40);
+dec_thr(3, 8, 1, 120);
+dec_thr(5, 5, 1, 120);
+dec_thr(9, 3, 3, 40);
+dec_thr(7, 4, 1, 120);
+dec_thr(6, 4, 6, 20);
+dec_thr(6, 4, 5, 30);
+dec_thr(6, 4, 4, 30);
+dec_thr(4, 7, 4, 30);
+// dec_thr(6, 4, 3, 40);
+// dec_thr(4, 7, 5, 30);
+#endif
+
+static pattern_t const *thr_patterns[] = {
+#ifdef SCAN_PARAMS
+	ptr_thr(3, 8, 1, 120),
+	ptr_thr(4, 7, 1, 120),
+	ptr_thr(5, 5, 1, 120),
+	ptr_thr(6, 4, 1, 120),
+	ptr_thr(7, 4, 1, 120),
+	ptr_thr(8, 3, 1, 120),
+	ptr_thr(9, 3, 1, 120),
+	ptr_thr(3, 8, 2, 60),
+	ptr_thr(4, 7, 2, 60),
+	ptr_thr(5, 5, 2, 60),
+	ptr_thr(6, 4, 2, 60),
+	ptr_thr(7, 4, 2, 60),
+	ptr_thr(8, 3, 2, 60),
+	ptr_thr(9, 3, 2, 60),
+	ptr_thr(3, 8, 3, 40),
+	ptr_thr(4, 7, 3, 40),
+	ptr_thr(5, 5, 3, 40),
+	ptr_thr(6, 4, 3, 40),
+	ptr_thr(7, 4, 3, 40),
+	ptr_thr(8, 3, 3, 40),
+	ptr_thr(9, 3, 3, 40),
+	ptr_thr(3, 8, 4, 30),
+	ptr_thr(4, 7, 4, 30),
+	ptr_thr(5, 5, 4, 30),
+	ptr_thr(6, 4, 4, 30),
+	ptr_thr(7, 4, 4, 30),
+	ptr_thr(8, 3, 4, 30),
+	ptr_thr(9, 3, 4, 30),
+	ptr_thr(3, 8, 5, 30),
+	ptr_thr(4, 7, 5, 30),
+	ptr_thr(5, 5, 5, 30),
+	ptr_thr(6, 4, 5, 30),
+	ptr_thr(7, 4, 5, 30),
+	ptr_thr(8, 3, 5, 30),
+	ptr_thr(9, 3, 5, 30),
+	ptr_thr(3, 8, 6, 20),
+	ptr_thr(4, 7, 6, 20),
+	ptr_thr(5, 5, 6, 20),
+	ptr_thr(6, 4, 6, 20),
+	ptr_thr(7, 4, 6, 20),
+	ptr_thr(8, 3, 6, 20),
+	ptr_thr(9, 3, 6, 20),
+#else
+	ptr_thr(9, 3, 1, 120),
+	ptr_thr(6, 4, 3, 40),
+	ptr_thr(3, 8, 1, 120),
+	ptr_thr(5, 5, 1, 120),
+	ptr_thr(9, 3, 3, 40),
+	ptr_thr(7, 4, 1, 120),
+	ptr_thr(6, 4, 6, 20),
+	ptr_thr(6, 4, 5, 30),
+	ptr_thr(6, 4, 4, 30),
+	ptr_thr(4, 7, 4, 30),
+	// ptr_thr(6, 4, 3, 40),
+	// ptr_thr(4, 7, 5, 30),
+#endif
+	NULL
+};
 
 /*
  * provides prologue and epilogue for benchmarking
@@ -392,257 +266,217 @@ private:
 	double const freq = 0.0;
 
 	/* constants passed to the core loop */
-	size_t const xseed  = 0;
-	size_t const xconst = 0;
-	uint8x16_t const vseed  = vdupq_n_u8(0);
-	uint8x16_t const vconst = vdupq_n_u8(0);
+	size_t const xseed = 0;
+	uint8x16_t const vseed = vdupq_n_u8(0);
 
-	/* for storing registers */
-	static size_t const stack_size = (size_t)32 * 8 + 32 * 16;
-
-	/* #iterations */
-	static size_t const n_insns = (size_t)21 * 900 * 1024;
-
-public:
-	bench(
-		double const &_freq,
-		size_t const &_xseed,
-		size_t const &_xconst,
-		uint8x16_t const &_vseed,
-		uint8x16_t const &_vconst
-	) : CodeGenerator(65536),
-		freq(_freq),
-		xseed(_xseed),
-		xconst(_xconst),
-		vseed(_vseed),
-		vconst(_vconst) {
-	}
-	bench(
-		double const &_freq,
-		size_t const &_xseed = 1,
-		size_t const &_xconst = 17,
-		uint8_t const &_vseed = 1,
-		uint8_t const &_vconst = 17
-	) : bench(_freq, _xseed, _xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst)) {
-	}
-	bench(
-		double const &_freq,
-		void *const &_xseed,
-		size_t const &_xconst = 17,
-		uint8_t const &_vseed = 1,
-		uint8_t const &_vconst = 17
-	) : bench(_freq, (size_t)_xseed, _xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst)) {
-	}
+	/* helper SIMD-scalar registers */
+	#define a(_n)	AReg(w##_n, x##_n, v##_n, b##_n, h##_n, s##_n, d##_n, q##_n)
+	AReg const regs[36] = {
+		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7),
+		a(8),  a(9),  a(10), a(11), a(12), a(13), a(14), a(15),
+		a(16), a(17), a(18), a(19), a(20), a(21), a(22), a(23),
+		a(24), a(25), a(26), a(27),
+		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7)
+	};
+	#undef a
 
 	/* prologue and epilogue */
+	static size_t const stack_size = (size_t)32 * 16 + 32 * 8;
+
 	void head(void) {
+		/* extend stack */
 		sub(sp, sp, stack_size);
 
 		/* save everything */
-		#define x(_n)	str(x##_n, ptr(sp, (uint32_t)(stack_size - ((_n) + 1) * 8)))
-		x(0);  x(1);  x(2);  x(3);  x(4);  x(5);  x(6);  x(7);
-		x(8);  x(9);  x(10); x(11); x(12); x(13); x(14); x(15);
-		x(16); x(17); x(18); x(19); x(20); x(21); x(22); x(23);
-		x(24); x(25); x(26); x(27); x(28); x(29); x(30);
-		#undef x
+		for(size_t i = 0; i < 32; i++) {
+			str(regs[i].x, ptr(sp, (uint32_t)(stack_size - (i + 1) * 8)));
+			str(regs[i].q, ptr(sp, (uint32_t)(stack_size - (i + 1) * 16 - 32 * 8)));
+		}
 
-		#define q(_n)	str(q##_n, ptr(sp, (uint32_t)(stack_size - ((_n) + 1) * 16 - 32 * 8)))
-		q(0);  q(1);  q(2);  q(3);  q(4);  q(5);  q(6);  q(7);
-		q(8);  q(9);  q(10); q(11); q(12); q(13); q(14); q(15);
-		q(16); q(17); q(18); q(19); q(20); q(21); q(22); q(23);
-		q(24); q(25); q(26); q(27); q(28); q(29); q(30); q(31);
-		#undef q
-
+		/* initialize registers */
+		for(size_t i = 1; i < 32; i++) {
+			mov(regs[i].x, x0);
+			mov(regs[i].v.b16, v0.b16);
+		}
 		return;
 	}
 	void tail(void) {
 		/* load everything */
-		#define x(_n) 	ldr(x##_n, ptr(sp, (uint32_t)(stack_size - ((_n) + 1) * 8)));
-		x(0);  x(1);  x(2);  x(3);  x(4);  x(5);  x(6);  x(7);
-		x(8);  x(9);  x(10); x(11); x(12); x(13); x(14); x(15);
-		x(16); x(17); x(18); x(19); x(20); x(21); x(22); x(23);
-		x(24); x(25); x(26); x(27); x(28); x(29); x(30);
-		#undef x
+		for(size_t i = 0; i < 32; i++) {
+			ldr(regs[i].x, ptr(sp, (uint32_t)(stack_size - (i + 1) * 8)));
+			ldr(regs[i].q, ptr(sp, (uint32_t)(stack_size - (i + 1) * 16 - 32 * 8)));
+		}
 
-		#define q(_n) 	ldr(q##_n, ptr(sp, (uint32_t)(stack_size - ((_n) + 1) * 16 - 32 * 8)));
-		q(0);  q(1);  q(2);  q(3);  q(4);  q(5);  q(6);  q(7);
-		q(8);  q(9);  q(10); q(11); q(12); q(13); q(14); q(15);
-		q(16); q(17); q(18); q(19); q(20); q(21); q(22); q(23);
-		q(24); q(25); q(26); q(27); q(28); q(29); q(30); q(31);
-		#undef q
-
+		/* unwind stack and return */
 		add(sp, sp, stack_size);
 		ret();
 		return;
 	}
 
-	/* measure latency and throughput */
-	measure_t lat(op_t fp_body, op_t fp_collect, double offset = 0.0) {
-		/* save registers, core loop, and restore registers */
-		head(); body_lat(fp_body, fp_collect); tail(); ready();
+	/* pattern generator */
+	static size_t const n_insns_base = (size_t)4 * 21 * 900 * 1001;
+	size_t const n_insns = n_insns_base;
 
-		/* generate the code for the loop; then run twice. first is for warming up. */
-		auto fn = getCode<void (*)(size_t xs, size_t xc, uint8x16_t vs, uint8x16_t vc)>();
-		fn(xseed, xconst, vseed, vconst);
-		size_t const ns = measure_nsec({ fn(xseed, xconst, vseed, vconst); });
+	/* pattern: (count, pitch, offset, mod) */
+	size_t count_insns(pattern_t const *p) {
+		if(p == NULL || p->count == 0) { return(1); }
+		return(p->count * count_insns(p + 1));
+	}
+	void expand(op_t fp, pattern_t const *p, size_t base) {
+		if(p == NULL || p->count == 0) {
+			// assert(base < 30);
+			size_t const offset = p[-1].offset;
+			size_t const mod = p[-1].mod;
+			fp(this, &regs[(base + offset) % mod], &regs[base % mod]);
+			return;
+		}
+		for(size_t i = 0; i < p->count; i++) {
+			expand(fp, p + 1, i * p->pitch + base);
+		}
+		return;
+	}
+	void expand(op_t fp, pattern_t const *p) {
+		/* loop counter; roundup fractions */
+		size_t const count = count_insns(p);
+		mov(x29, (n_insns + count - 1) / count);
 
+		/* core loop */
+		align(64);
+		Label loop = L();
+		{
+			expand(fp, p, 0);
+			subs(x29, x29, 1);
+			bne(loop);
+		}
+		return;
+	}
+	double run(op_t fp, pattern_t const *p) {
 		/* flush code area for the next measure */
 		reset(); setProtectModeRW();
-		return((measure_t){
-			.lat = (double)ns * freq / ((double)n_insns * 1000000000.0) - offset,
-			.rct = 0
-		});
-	}
-	measure_t lat(op_t fp_body, double offset = 0.0) {
-		return(lat(fp_body, op( (void)g ), offset));
-	}
-	measure_t rct(op_t fp_body, double factor = 1.0) {
+
 		/* save registers, core loop, and restore registers */
-		head(); body_thr(fp_body); tail(); ready();
+		head(); expand(fp, p); tail(); ready();
 
 		/* generate the code for the loop; then run twice. first is for warming up. */
-		auto fn = getCode<void (*)(size_t xs, size_t xc, uint8x16_t vs, uint8x16_t vc)>();
-		fn(xseed, xconst, vseed, vconst);
-		size_t const ns = measure_nsec({ fn(xseed, xconst, vseed, vconst); });
+		auto fn = getCode<void (*)(size_t xs, uint8x16_t vs)>();
+		fn(xseed, vseed);
+		size_t const ns = measure_nsec({ fn(xseed, vseed); });
+		return((double)ns * freq / ((double)n_insns * 1000000000.0));
+	}
+	double run(op_t fp, pattern_t const **q, size_t line = 0) {
+		double res = 1000000000.0;
+		while(*q != NULL) {
+			double const r = run(fp, *q++);
+			if(line != 0) {
+				printf("#%zu\t%zu_%zu_%zu_%zu\t%.3f\n", line, q[-1][3].count, q[-1][1].count, q[-1][2].count, q[-1][0].count, 1.0 / r);
+			}
+			res = std::min(res, r);
+		}
+		return(res);
+	}
 
-		/* flush code area for the next measure */
-		reset(); setProtectModeRW();
+public:
+	bench(
+		double const &_freq,
+		size_t const &_xseed,
+		uint8x16_t const &_vseed,
+		size_t const &_rep
+	) : CodeGenerator(65536),
+		freq(_freq),
+		xseed(_xseed),
+		vseed(_vseed),
+		n_insns(_rep * n_insns_base) {
+	}
+	bench(
+		double const &_freq,
+		size_t const &_xseed = 1,
+		uint8_t const &_vseed = 1,
+		size_t const &_rep = 1
+	) : bench(_freq, _xseed, vdupq_n_u8(_vseed), _rep) {
+	}
+	bench(
+		double const &_freq,
+		void *const &_xseed,
+		uint8_t const &_vseed = 1,
+		size_t const &_rep = 1
+	) : bench(_freq, (size_t)_xseed, vdupq_n_u8(_vseed), _rep) {
+	}
+
+	void print_pattern(FILE *fp, pattern_t const *p, size_t base = 0) {
+		if(p == NULL || p->count == 0) {
+			fprintf(fp, "%zu\n", base);
+			return;
+		}
+		for(size_t i = 0; i < p->count; i++) {
+			print_pattern(fp, p + 1, i * p->pitch + base);
+		}
+	}
+
+	measure_t lat_(size_t line, op_t fp, double offset = 0.0, pattern_t const **q = lat_patterns) {
+		(void)line;
 		return((measure_t){
-			.lat = 0,
-			.rct = ((double)n_insns * 1000000000.0) / ((double)ns * freq) * factor
+			.lat = run(fp, *q) - offset,
+			.thr = 0.0
 		});
 	}
-	measure_t both(op_t fp_body, double offset = 0.0, double factor = 1.0) {
-		measure_t const m = {
-			.lat = lat(fp_body, offset).lat,
-			.rct = rct(fp_body, factor).rct
-		};
-		return(m);
+	measure_t thr_(size_t line, op_t fp, pattern_t const **q = thr_patterns) {
+		return((measure_t){
+			.lat = 0.0,
+			.thr = 1.0 / run(fp, q, line)
+		});
 	}
-	measure_t both(op_t fp_body, op_t fp_collect, double offset = 0.0, double factor = 1.0) {
-		measure_t const m = {
-			.lat = lat(fp_body, fp_collect, offset).lat,
-			.rct = rct(fp_body, factor).rct
-		};
-		return(m);
+	measure_t both_(
+		size_t line,
+		op_t fp_body,
+		op_t fp_collect,
+		double offset = 0.0,
+		pattern_t const **lq = lat_patterns,
+		pattern_t const **tq = thr_patterns
+	) {
+		return((measure_t){
+			.lat = lat_(
+				line,
+				op_cap( fp_body(g, d, s); fp_collect(g, d, s) ),
+				offset, lq
+			).lat,
+			.thr = thr_(line, fp_body, tq).thr
+		});
 	}
-
-	/* default template for measuring them */
-	virtual void body_lat(op_t fp_body, op_t fp_collect) {
-		/*
-		 * place constants at x16 and v16.
-		 * x0: xseed, x1: xconst, v0: vseed, v1: vconst when the function is called
-		 */
-		mov(x25,     x1);
-		mov(v25.b16, v1.b16);
-
-		/* cut dependency chains */
-		#define x(_n)	eor(x##_n, x##_n, x##_n)
-		#define v(_n)	eor(v##_n.b16, v##_n.b16, v##_n.b16)
-		x(1);  x(2);  x(3);  x(4);  x(5);  x(6);  x(7);  x(8);
-		x(9);  x(10); x(11); x(12); x(13); x(14); x(15); x(16);
-		x(17); x(18); x(19); x(20); x(21); x(22); x(23); x(24);
-		v(1);  v(2);  v(3);  v(4);  v(5);  v(6);  v(7);  v(8);
-		v(9);  v(10); v(11); v(12); v(13); v(14); v(15); v(16);
-		v(17); v(18); v(19); v(20); v(21); v(22); v(23); v(24);
-		#undef x
-		#undef v
-
-		/* initialize loop counter */
-		mov(x26, n_insns / (25 * 4));
-
-		align(64);
-		Label loop;
-		L(loop);
-		for(size_t i = 0; i < 4; i++) {
-			fp_body(this, x1,  x0,  x25, w1,  w0,  w25, v1,  v0,  v25, loop); fp_collect(this, x1,  x0,  x25, w1,  w0,  w25, v1,  v0,  v25, loop);
-			fp_body(this, x2,  x1,  x25, w2,  w1,  w25, v2,  v1,  v25, loop); fp_collect(this, x2,  x1,  x25, w2,  w1,  w25, v2,  v1,  v25, loop);
-			fp_body(this, x3,  x2,  x25, w3,  w2,  w25, v3,  v2,  v25, loop); fp_collect(this, x3,  x2,  x25, w3,  w2,  w25, v3,  v2,  v25, loop);
-			fp_body(this, x4,  x3,  x25, w4,  w3,  w25, v4,  v3,  v25, loop); fp_collect(this, x4,  x3,  x25, w4,  w3,  w25, v4,  v3,  v25, loop);
-			fp_body(this, x5,  x4,  x25, w5,  w4,  w25, v5,  v4,  v25, loop); fp_collect(this, x5,  x4,  x25, w5,  w4,  w25, v5,  v4,  v25, loop);
-			fp_body(this, x6,  x5,  x25, w6,  w5,  w25, v6,  v5,  v25, loop); fp_collect(this, x6,  x5,  x25, w6,  w5,  w25, v6,  v5,  v25, loop);
-			fp_body(this, x7,  x6,  x25, w7,  w6,  w25, v7,  v6,  v25, loop); fp_collect(this, x7,  x6,  x25, w7,  w6,  w25, v7,  v6,  v25, loop);
-			fp_body(this, x8,  x7,  x25, w8,  w7,  w25, v8,  v7,  v25, loop); fp_collect(this, x8,  x7,  x25, w8,  w7,  w25, v8,  v7,  v25, loop);
-			fp_body(this, x9,  x8,  x25, w9,  w8,  w25, v9,  v8,  v25, loop); fp_collect(this, x9,  x8,  x25, w9,  w8,  w25, v9,  v8,  v25, loop);
-			fp_body(this, x10, x9,  x25, w10, w9,  w25, v10, v9,  v25, loop); fp_collect(this, x10, x9,  x25, w10, w9,  w25, v10, v9,  v25, loop);
-			fp_body(this, x11, x10, x25, w11, w10, w25, v11, v10, v25, loop); fp_collect(this, x11, x10, x25, w11, w10, w25, v11, v10, v25, loop);
-			fp_body(this, x12, x11, x25, w12, w11, w25, v12, v11, v25, loop); fp_collect(this, x12, x11, x25, w12, w11, w25, v12, v11, v25, loop);
-			fp_body(this, x13, x12, x25, w13, w12, w25, v13, v12, v25, loop); fp_collect(this, x13, x12, x25, w13, w12, w25, v13, v12, v25, loop);
-			fp_body(this, x14, x13, x25, w14, w13, w25, v14, v13, v25, loop); fp_collect(this, x14, x13, x25, w14, w13, w25, v14, v13, v25, loop);
-			fp_body(this, x15, x14, x25, w15, w14, w25, v15, v14, v25, loop); fp_collect(this, x15, x14, x25, w15, w14, w25, v15, v14, v25, loop);
-			fp_body(this, x16, x15, x25, w16, w15, w25, v16, v15, v25, loop); fp_collect(this, x16, x15, x25, w16, w15, w25, v16, v15, v25, loop);
-			fp_body(this, x17, x16, x25, w17, w16, w25, v17, v16, v25, loop); fp_collect(this, x17, x16, x25, w17, w16, w25, v17, v16, v25, loop);
-			fp_body(this, x18, x17, x25, w18, w17, w25, v18, v17, v25, loop); fp_collect(this, x18, x17, x25, w18, w17, w25, v18, v17, v25, loop);
-			fp_body(this, x19, x18, x25, w19, w18, w25, v19, v18, v25, loop); fp_collect(this, x19, x18, x25, w19, w18, w25, v19, v18, v25, loop);
-			fp_body(this, x20, x19, x25, w20, w19, w25, v20, v19, v25, loop); fp_collect(this, x20, x19, x25, w20, w19, w25, v20, v19, v25, loop);
-			fp_body(this, x21, x20, x25, w21, w20, w25, v21, v20, v25, loop); fp_collect(this, x21, x20, x25, w21, w20, w25, v21, v20, v25, loop);
-			fp_body(this, x22, x21, x25, w22, w21, w25, v22, v21, v25, loop); fp_collect(this, x22, x21, x25, w22, w21, w25, v22, v21, v25, loop);
-			fp_body(this, x23, x22, x25, w23, w22, w25, v23, v22, v25, loop); fp_collect(this, x23, x22, x25, w23, w22, w25, v23, v22, v25, loop);
-			fp_body(this, x24, x23, x25, w24, w23, w25, v24, v23, v25, loop); fp_collect(this, x24, x23, x25, w24, w23, w25, v24, v23, v25, loop);
-			fp_body(this, x0,  x24, x25, w0,  w24, w25, v0,  v24, v25, loop); fp_collect(this, x0,  x24, x25, w0,  w24, w25, v0,  v24, v25, loop);
-		}
-		subs(x26, x26, 1);
-		bne(loop);
-		return;
-	};
-	virtual void body_thr(op_t fp_body) {
-		/*
-		 * place constants at x16 and v16.
-		 * x0: xseed, x1: xconst, v0: vseed, v1: vconst when the function is called
-		 */
-		mov(x25,     x1);
-		mov(v25.b16, v1.b16);
-
-		/* copy input variable to all the registers used in the loop */
-		#define x(_n)	mov(x##_n, x0)
-		#define v(_n)	mov(v##_n.b16, v0.b16)
-		x(1);  x(2);  x(3);  x(4);  x(5);  x(6);  x(7);  x(8);
-		x(9);  x(10); x(11); x(12); x(13); x(14); x(15); x(16);
-		x(17); x(18); x(19); x(20); x(21); x(22); x(23); x(24);
-		v(1);  v(2);  v(3);  v(4);  v(5);  v(6);  v(7);  v(8);
-		v(9);  v(10); v(11); v(12); v(13); v(14); v(15); v(16);
-		v(17); v(18); v(19); v(20); v(21); v(22); v(23); v(24);
-		#undef x
-		#undef v
-
-		/* initialize loop counter */
-		mov(x26, n_insns / (25 * 64));
-
-		align(64);
-		Label loop;
-		L(loop);
-		for(size_t i = 0; i < 64; i++) {
-			fp_body(this, x0,  x0,  x25, w0,  w0,  w25, v0,  v0,  v25, loop);
-			fp_body(this, x1,  x1,  x25, w1,  w1,  w25, v1,  v1,  v25, loop);
-			fp_body(this, x2,  x2,  x25, w2,  w2,  w25, v2,  v2,  v25, loop);
-			fp_body(this, x3,  x3,  x25, w3,  w3,  w25, v3,  v3,  v25, loop);
-			fp_body(this, x4,  x4,  x25, w4,  w4,  w25, v4,  v4,  v25, loop);
-			fp_body(this, x5,  x5,  x25, w5,  w5,  w25, v5,  v5,  v25, loop);
-			fp_body(this, x6,  x6,  x25, w6,  w6,  w25, v6,  v6,  v25, loop);
-			fp_body(this, x7,  x7,  x25, w7,  w7,  w25, v7,  v7,  v25, loop);
-			fp_body(this, x8,  x8,  x25, w8,  w8,  w25, v8,  v8,  v25, loop);
-			fp_body(this, x9,  x9,  x25, w9,  w9,  w25, v9,  v9,  v25, loop);
-			fp_body(this, x10, x10, x25, w10, w10, w25, v10, v10, v25, loop);
-			fp_body(this, x11, x11, x25, w11, w11, w25, v11, v11, v25, loop);
-			fp_body(this, x12, x12, x25, w12, w12, w25, v12, v12, v25, loop);
-			fp_body(this, x13, x13, x25, w13, w13, w25, v13, v13, v25, loop);
-			fp_body(this, x14, x14, x25, w14, w14, w25, v14, v14, v25, loop);
-			fp_body(this, x15, x15, x25, w15, w15, w25, v15, v15, v25, loop);
-			fp_body(this, x16, x16, x25, w16, w16, w25, v16, v16, v25, loop);
-			fp_body(this, x17, x17, x25, w17, w17, w25, v17, v17, v25, loop);
-			fp_body(this, x18, x18, x25, w18, w18, w25, v18, v18, v25, loop);
-			fp_body(this, x19, x19, x25, w19, w19, w25, v19, v19, v25, loop);
-			fp_body(this, x20, x20, x25, w20, w20, w25, v20, v20, v25, loop);
-			fp_body(this, x21, x21, x25, w21, w21, w25, v21, v21, v25, loop);
-			fp_body(this, x22, x22, x25, w22, w22, w25, v22, v22, v25, loop);
-			fp_body(this, x23, x23, x25, w23, w23, w25, v23, v23, v25, loop);
-			fp_body(this, x24, x24, x25, w24, w24, w25, v24, v24, v25, loop);
-		}
-		subs(x26, x26, 1);
-		bne(loop);
-		return;
-	};
+	measure_t both_(
+		size_t line,
+		op_t fp,
+		double offset = 0.0,
+		pattern_t const **lq = lat_patterns,
+		pattern_t const **tq = thr_patterns
+	) {
+		return((measure_t){
+			.lat = lat_(line, fp, offset, lq).lat,
+			.thr = thr_(line, fp, tq).thr
+		});
+	}
 };
+
+/*
+ * I assume the processor has 1 cycle latency for 64bit add.
+ */
+#define ADD_LATENCY_CYCLES		( (size_t)1 )
+
+/*
+ * estimate CPU frequency from a sequence of adds. it assumes the processor
+ * does not scale the frequency. otherwise the result becomes unreliable.
+ */
+static inline
+double estimate_cpu_freq(void) {
+	double const coef = 100000000.0;
+	bench b(coef, (size_t)0, 0, 25);
+
+	double r = 0.0;
+	for(size_t i = 0; i < 3; i++) {
+		r = b.lat_(0, op( g->add(d->x, s->x, 1) )).lat;
+	}
+	return(coef / ((double)ADD_LATENCY_CYCLES * r));
+}
+
 
 #endif	/* _UTILS_H_INCLUDED */
 /*
