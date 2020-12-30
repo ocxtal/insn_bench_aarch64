@@ -12,7 +12,9 @@
 #endif
 #define _DEFAULT_SOURCE			/* for sigsetjmp / siglongjmp on linux */
 
+#include <stdarg.h>
 #include <stdint.h>
+#include <string.h>
 #include <setjmp.h>
 #include <signal.h>
 #include <time.h>
@@ -39,6 +41,35 @@ using namespace Xbyak_aarch64;
 	size_t const end = read_clock_nsec(); \
 	end - start; \
 })
+
+/*
+ * run command and dump output
+ */
+static
+char *run_command(char const *cmd) {
+	FILE *fp = popen(cmd, "r");
+	if(fp == NULL) {
+		return(NULL);
+	}
+
+	size_t const buf_size = 1024 * 1024;
+	uint8_t *buf = (uint8_t *)malloc(buf_size);
+
+	size_t cap = 1024, used = 0;
+	uint8_t *dst = (uint8_t *)malloc(cap);
+
+    while(fgets((char *)buf, buf_size - 1, fp) != NULL) {
+        size_t const bytes = strlen((char *)buf);
+		if(used + bytes >= cap) {
+			dst = (uint8_t *)realloc((void *)dst, (cap *= 2));
+		}
+		memcpy(&dst[used], buf, bytes);
+		dst[used += bytes] = 0;
+    }
+	free(buf);
+	pclose(fp);
+	return((char *)dst);
+}
 
 /* result returned in this */
 struct measure_t {
@@ -72,50 +103,60 @@ void init_sigill_trap(void) {
 	r; \
 })
 
+/* init */
+static
+void init_bench() {
+	init_sigill_trap();
+	/* anything else? */
+}
+
 /* printer */
 class printer {
-	bool md = false;
 public:
+	bool md = false;
+
+	void leader() {
+		if(!md) { printf("# "); }
+	}
+	void newline() {
+		if(md) { putchar('\n'); }
+	}
+
 	printer(
 		bool _md,
 		char const *title = NULL,
 		size_t depth = 1
 	) : md(_md) {
-
 		size_t const max_depth = 3;
 		depth = std::min(depth, max_depth);
-		printf("%s%s\n", "#### "[md ? max_depth - depth : max_depth], title);
-		tbrk(); thdr(); tbrk();
+		printf("%s%s\n", &"#### "[md ? max_depth - depth : max_depth], title);
+		newline();
 	}
 	~printer() {
-		tbrk();
+		newline();
 	}
-}
+};
 
 class table : public printer {
-	static char const *seps[2][] = {
+	char const *seps[2][4] = {
 		{ "",   "\t",  "",   NULL },
 		{ "| ", " | ", " |", NULL }
 	};
 
-	void thdr() {
-		printf("%sinstruction%slatency%sthrouput%s\n", seps[md][0], seps[md][1], seps[md][1], seps[md][2]);
+	void thdr(void) {
+		leader();
+		printf("%sinstruction%slatency%sthroughput%s\n", seps[md][0], seps[md][1], seps[md][1], seps[md][2]);
 	}
-	void tbrk() {
-		if(md) { printf("+--------+--------+--------+\n"); }
+	void tbrk(void) {
+		if(md) { printf("|--------|--------|--------|\n"); }
 	}
 public:
 	table(
 		bool _md,
 		char const *title = NULL,
 		size_t depth = 1
-	) {
-		printer::printer(_md, title, depth);
-		tbrk();
+	) : printer(_md, title, depth) {
 		thdr();
-		tbrk();
-	}
-	~table() {
 		tbrk();
 	}
 	void put(char const *name, measure_t c) {
@@ -136,33 +177,44 @@ public:
 
 		return;
 	}
-}
+};
 
 class notes : public printer {
-	char const *leader[] = {
-		"# ", "", NULL
-	};
 public:
 	notes(
 		bool _md,
 		char const *title = NULL,
 		size_t depth = 1
-	) {
-		printer::printer(_md, title, depth);
+	) : printer(_md, title, depth){
 	}
-	void put(char const *line) {
-		printf("%s%s\n", leader[md], line);
-	}
-	void item(char const *line) {
-		printf("%s- %s\n", leader[md], line);
-	}
-}
+	void put(char const *fmt, ...) {
+		leader();
 
-/* init */
-static
-void init_bench(char const *title) {
-	init_sigill_trap();
-}
+		va_list a;
+		va_start(a, fmt);
+		vfprintf(stdout, fmt, a);
+		va_end(a);
+
+		printf("\n");
+	}
+	void item(char const *fmt, ...) {
+		leader(); printf("- ");
+
+		va_list a;
+		va_start(a, fmt);
+		vfprintf(stdout, fmt, a);
+		va_end(a);
+
+		printf("\n");
+	}
+	void quote(char const *str) {
+		size_t len = strlen(str);
+		while(len > 0 && str[len - 1] == '\n') { len--; }
+		if(md) { printf("```\n"); }
+		printf("%.*s\n", (int)len, str);
+		if(md) { printf("```\n"); }
+	}
+};
 
 /*
  * parameter scanning utils
