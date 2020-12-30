@@ -8,6 +8,8 @@
 #define _UTILS_H_INCLUDED
 
 #include <stdint.h>
+#include <setjmp.h>
+#include <signal.h>
 #include <time.h>
 #include <functional>
 #include <arm_neon.h>
@@ -46,13 +48,13 @@ void print(char const *name, measure_t c) {
 	(void)name; (void)c;
 
 	#else
-	if(c.lat == 0.0) {
-		printf("%s\t-\t%.2f\n", name, c.thr);
-	} else if(c.thr == 0.0) {
-		printf("%s\t%.2f\t-\n", name, c.lat);
-	} else {
-		printf("%s\t%.2f\t%.2f\n", name, c.lat, c.thr);
-	}
+	/* trapped instruction when both are negative */
+	size_t const na = (c.lat < 0.0 && c.thr < 0.0) ? 2 : 0;
+
+	char const *fmt[] = { "%.2f", "-", "n/a", "n/a" };
+	printf("%s\t", name);
+	printf(fmt[na + (c.lat == 0.0)], c.lat); putchar('\t');
+	printf(fmt[na + (c.thr == 0.0)], c.thr); putchar('\n');
 	#endif
 
 	return;
@@ -87,20 +89,37 @@ public:
 /* op generation function template and helper */
 // typedef void (*op_t)(CodeGenerator *g, AReg const *r);
 typedef std::function<void (CodeGenerator *, AReg const *, AReg const *)> op_t;
-#define op(_body)		( [](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
-#define op_cap(_body)	( [=](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
+#define op(_body)			( [](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
+#define op_cap(_body)		( [=](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
+
+/*
+ * illegal instruction trapping
+ */
+extern jmp_buf jb;
+
+static
+void sigill_trap(int s) {
+	signal(s, SIG_IGN);
+	longjmp(jb, 1);
+}
+
+#define try_setjmp(_body) ({ \
+	signal(SIGILL, sigill_trap); \
+	measure_t const r = setjmp(jb) == 0 ? ( _body ) : (measure_t){ -1.0, -1.0 }; \
+	r; \
+})
 
 /*
  * parameter scanning util
  */
 #ifdef SCAN_PARAMS
-#  define both(_b, ...)		(_b).both_(__LINE__, __VA_ARGS__)
-#  define lat(_b, ...)		(_b).lat_(__LINE__, __VA_ARGS__)
-#  define thr(_b, ...)		(_b).thr_(__LINE__, __VA_ARGS__)
+#  define both(_b, ...)		try_setjmp((_b).both_(__LINE__, __VA_ARGS__))
+#  define lat(_b, ...)		try_setjmp((_b).lat_(__LINE__, __VA_ARGS__))
+#  define thr(_b, ...)		try_setjmp((_b).thr_(__LINE__, __VA_ARGS__))
 #else
-#  define both(_b, ...)		(_b).both_(0, __VA_ARGS__)
-#  define lat(_b, ...)		(_b).lat_(0, __VA_ARGS__)
-#  define thr(_b, ...)		(_b).thr_(0, __VA_ARGS__)
+#  define both(_b, ...)		try_setjmp((_b).both_(0, __VA_ARGS__))
+#  define lat(_b, ...)		try_setjmp((_b).lat_(0, __VA_ARGS__))
+#  define thr(_b, ...)		try_setjmp((_b).thr_(0, __VA_ARGS__))
 #endif
 
 /*

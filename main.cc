@@ -9,6 +9,9 @@
 #include "ldst.h"
 #include "alu.h"
 
+#include <setjmp.h>
+jmp_buf jb;
+
 int main(void) {
 
 	printf("# measuring CPU frequency, assuming latency of 64bit addition is %zu cycle(s)...\n", ADD_LATENCY_CYCLES);
