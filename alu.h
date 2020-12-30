@@ -62,7 +62,7 @@ void bench_alu(double freq) {
 	print("mov / movn (imm<<16)",       thr(b, op( g->movn(d->x, 0x1ffc, 16) )));
 	print("movk",                       thr(b, op( g->movk(d->x, 0x1ffc) )));
 	print("movk (<<16)",                thr(b, op( g->movk(d->x, 0x1ffc, 16) )));
-	#if 1
+	#if 0
 	/* basic arith */
 	print("add (reg)",                  both(b, op( g->add(d->x, d->x, s->x) )));
 	print("add (reg<<2)",               both(b, op( g->add(d->x, d->x, s->x, ShMod::LSL, 2) )));
@@ -174,9 +174,13 @@ void bench_alu(double freq) {
 	print("ccmp (reg; lt)",             both(b, op( g->ccmp(s->x, s->x, 0x2, Cond::LT) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	print("ccmp (imm; eq)",             both(b, op( g->ccmp(s->x, 17, 0x2, Cond::EQ) ),             op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	print("ccmp (imm; lt)",             both(b, op( g->ccmp(s->x, 17, 0x2, Cond::LT) ),             op( g->adc(d->x, d->x, s->x) ), adc_latency));
-
+	#endif
 	/* flag manipulation */
 	print("cfinv",                      both(b, op( g->cfinv() ),                                   op( g->adc(d->x, d->x, s->x); g->adds(d->x, d->x, s->x) ), adds_adc_latency));
+	print("ccmp (imm; lt)",             both(b, op( g->ccmp(s->x, 17, 0x2, Cond::LT) ),             op( g->adc(d->x, d->x, s->x) ), adc_latency));
+	signal(SIGILL, sigill_trap);
+	print("cfinv",                      both(b, op( g->cfinv() ),                                   op( g->adc(d->x, d->x, s->x); g->adds(d->x, d->x, s->x) ), adds_adc_latency));
+
 	print("rmif",                       both(b, op( g->rmif(s->x, 17, 0xf) ),                       op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	print("setf8",                      both(b, op( g->setf8(s->w) ),                               op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	print("setf16",                     both(b, op( g->setf16(s->w) ),                              op( g->adc(d->x, d->x, s->x) ), adc_latency));
@@ -184,6 +188,7 @@ void bench_alu(double freq) {
 	print("tst (reg<<2)",               both(b, op( g->tst(s->x, s->x, ShMod::LSL, 2) ),            op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	print("tst (imm)",                  both(b, op( g->tst(s->x, 0x1ffc) ),                         op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
+	#if 0
 	/* conditional arithmetic */
 	print("csinc (eq)",                 both(b, op( g->csinc(d->x, d->x, s->x, Cond::EQ) )));
 	print("csinc (lt)",                 both(b, op( g->csinc(d->x, d->x, s->x, Cond::LT) )));

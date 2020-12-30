@@ -7,6 +7,11 @@
 #ifndef _UTILS_H_INCLUDED
 #define _UTILS_H_INCLUDED
 
+#ifdef _DEFAULT_SOURCE
+#  undef _DEFAULT_SOURCE
+#endif
+#define _DEFAULT_SOURCE			/* for sigsetjmp / siglongjmp on linux */
+
 #include <stdint.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -41,57 +46,6 @@ struct measure_t {
 	double thr;		/* reciprocal throughput */
 };
 
-/* printer */
-static
-void print(char const *name, measure_t c) {
-	#ifdef SCAN_PARAMS
-	(void)name; (void)c;
-
-	#else
-	/* trapped instruction when both are negative */
-	size_t const na = (c.lat < 0.0 && c.thr < 0.0) ? 2 : 0;
-
-	char const *fmt[] = { "%.2f", "-", "n/a", "n/a" };
-	printf("%s\t", name);
-	printf(fmt[na + (c.lat == 0.0)], c.lat); putchar('\t');
-	printf(fmt[na + (c.thr == 0.0)], c.thr); putchar('\n');
-	#endif
-
-	return;
-}
-
-/*
- * register bundle
- */
-class AReg {
-public:
-	AReg(
-		WReg const &_w,
-		XReg const &_x,
-		VReg const &_v,
-		BReg const &_b,
-		HReg const &_h,
-		SReg const &_s,
-		DReg const &_d,
-		QReg const &_q
-	) : w(_w), x(_x), v(_v), b(_b), h(_h), s(_s), d(_d), q(_q) {
-	}
-	WReg const w;
-	XReg const x;
-	VReg const v;
-	BReg const b;
-	HReg const h;
-	SReg const s;
-	DReg const d;
-	QReg const q;
-};
-
-/* op generation function template and helper */
-// typedef void (*op_t)(CodeGenerator *g, AReg const *r);
-typedef std::function<void (CodeGenerator *, AReg const *, AReg const *)> op_t;
-#define op(_body)			( [](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
-#define op_cap(_body)		( [=](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
-
 /*
  * illegal instruction trapping
  */
@@ -99,18 +53,119 @@ extern jmp_buf jb;
 
 static
 void sigill_trap(int s) {
-	signal(s, SIG_IGN);
-	longjmp(jb, 1);
+	(void)s;
+	siglongjmp(jb, 1);
+}
+
+static
+void init_sigill_trap(void) {
+	struct sigaction a;
+	a.sa_handler = sigill_trap;
+	sigemptyset(&a.sa_mask);
+	sigaddset(&a.sa_mask, SIGILL);
+	sigaction(SIGILL, &a, NULL);
+	return;
 }
 
 #define try_setjmp(_body) ({ \
-	signal(SIGILL, sigill_trap); \
-	measure_t const r = setjmp(jb) == 0 ? ( _body ) : (measure_t){ -1.0, -1.0 }; \
+	measure_t const r = sigsetjmp(jb, 1) == 0 ? ( _body ) : (measure_t){ -1.0, -1.0 }; \
 	r; \
 })
 
+/* printer */
+class printer {
+	bool md = false;
+public:
+	printer(
+		bool _md,
+		char const *title = NULL,
+		size_t depth = 1
+	) : md(_md) {
+
+		size_t const max_depth = 3;
+		depth = std::min(depth, max_depth);
+		printf("%s%s\n", "#### "[md ? max_depth - depth : max_depth], title);
+		tbrk(); thdr(); tbrk();
+	}
+	~printer() {
+		tbrk();
+	}
+}
+
+class table : public printer {
+	static char const *seps[2][] = {
+		{ "",   "\t",  "",   NULL },
+		{ "| ", " | ", " |", NULL }
+	};
+
+	void thdr() {
+		printf("%sinstruction%slatency%sthrouput%s\n", seps[md][0], seps[md][1], seps[md][1], seps[md][2]);
+	}
+	void tbrk() {
+		if(md) { printf("+--------+--------+--------+\n"); }
+	}
+public:
+	table(
+		bool _md,
+		char const *title = NULL,
+		size_t depth = 1
+	) {
+		printer::printer(_md, title, depth);
+		tbrk();
+		thdr();
+		tbrk();
+	}
+	~table() {
+		tbrk();
+	}
+	void put(char const *name, measure_t c) {
+		#ifdef SCAN_PARAMS
+		(void)name; (void)c;
+
+		#else
+		/* trapped instruction when both are negative */
+		size_t const na = (c.lat < 0.0 && c.thr < 0.0) ? 2 : 0;
+
+		char const *fmt[] = { "%.2f", "-", "n/a", "n/a" };
+		printf("%s%s%s", seps[md][0], name, seps[md][1]);
+		printf(fmt[na + (c.lat == 0.0)], c.lat);
+		printf("%s", seps[md][1]);
+		printf(fmt[na + (c.thr == 0.0)], c.thr);
+		printf("%s\n", seps[md][2]);
+		#endif
+
+		return;
+	}
+}
+
+class notes : public printer {
+	char const *leader[] = {
+		"# ", "", NULL
+	};
+public:
+	notes(
+		bool _md,
+		char const *title = NULL,
+		size_t depth = 1
+	) {
+		printer::printer(_md, title, depth);
+	}
+	void put(char const *line) {
+		printf("%s%s\n", leader[md], line);
+	}
+	void item(char const *line) {
+		printf("%s- %s\n", leader[md], line);
+	}
+}
+
+/* init */
+static
+void init_bench(char const *title) {
+	init_sigill_trap();
+}
+
 /*
- * parameter scanning util
+ * parameter scanning utils
  */
 #ifdef SCAN_PARAMS
 #  define both(_b, ...)		try_setjmp((_b).both_(__LINE__, __VA_ARGS__))
@@ -275,6 +330,38 @@ static pattern_t const *thr_patterns[] = {
 #endif
 	NULL
 };
+
+/*
+ * register bundle for use in `bench` class below
+ */
+class AReg {
+public:
+	AReg(
+		WReg const &_w,
+		XReg const &_x,
+		VReg const &_v,
+		BReg const &_b,
+		HReg const &_h,
+		SReg const &_s,
+		DReg const &_d,
+		QReg const &_q
+	) : w(_w), x(_x), v(_v), b(_b), h(_h), s(_s), d(_d), q(_q) {
+	}
+	WReg const w;
+	XReg const x;
+	VReg const v;
+	BReg const b;
+	HReg const h;
+	SReg const s;
+	DReg const d;
+	QReg const q;
+};
+
+/* op generation function template and helper */
+// typedef void (*op_t)(CodeGenerator *g, AReg const *r);
+typedef std::function<void (CodeGenerator *, AReg const *, AReg const *)> op_t;
+#define op(_body)			( [](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
+#define op_cap(_body)		( [=](CodeGenerator *g, AReg const *d, AReg const *s) { (void)d; (void)s; _body; } )
 
 /*
  * provides prologue and epilogue for benchmarking
