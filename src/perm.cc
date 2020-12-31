@@ -6,7 +6,7 @@
 #include "utils.h"
 #include <stdlib.h>
 
-void bench_prem(bool md, double freq) {
+void bench_perm_vec(bool md, double freq) {
 	table t(md, "Vector permutation");
 	bench b(freq, (size_t)0, 0);
 

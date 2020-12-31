@@ -89,14 +89,16 @@ void bench_bitmanip(bool md, double freq, double adc_latency) {
 }
 
 void bench_logic(bool md, double freq) {
+	bench b(freq, (size_t)0, 0);
 	double const adc_latency = b.lat_(0, op( g->adc(d->x, s->x, s->x) )).lat;
+
 	bench_bitwise_logic(md, freq, adc_latency);
 	bench_bitmanip(md, freq, adc_latency);
 	return;
 }
 
 static
-void bench_bitwise_logic_vec(bool md, double freq, double adc_latency) {
+void bench_bitwise_logic_vec(bool md, double freq) {
 	table t(md, "Logical instructions");
 	bench b(freq, (size_t)0, 0);
 
@@ -171,7 +173,7 @@ void bench_bitmanip_vec(bool md, double freq) {
 	return;
 }
 
-void bench_logic(bool md, double freq) {
+void bench_logic_vec(bool md, double freq) {
 	bench_bitwise_logic_vec(md, freq);
 	bench_bitmanip_vec(md, freq);
 	return;

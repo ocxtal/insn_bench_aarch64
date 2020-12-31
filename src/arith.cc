@@ -7,9 +7,11 @@
 #include <stdlib.h>
 
 static
-void bench_basic_arith(bool md, double freq, double adc_latency) {
+void bench_basic_arith(bool md, double freq) {
 	table t(md, "Addition, subtraction, and negation");
 	bench b(freq, (size_t)0, 0);
+
+	double const adc_latency = b.lat_(0, op( g->adc(d->x, s->x, s->x) )).lat;
 
 	t.put("add (reg)",                  both(b, op( g->add(d->x, d->x, s->x) )));
 	t.put("add (reg<<2)",               both(b, op( g->add(d->x, d->x, s->x, ShMod::LSL, 2) )));

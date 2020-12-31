@@ -6,7 +6,7 @@
 #include "utils.h"
 #include <stdlib.h>
 
-void bench_conv_fp(bool md, double freq) {
+void bench_math_fp_vec(bool md, double freq) {
 	table t(md, "Floating point math");
 	bench b(freq, (size_t)0, 0);
 
