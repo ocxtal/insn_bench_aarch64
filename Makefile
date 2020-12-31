@@ -2,13 +2,22 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -O3 -mcpu=native -Ixbyak_aarch64/xbyak_aarch64
 LDFLAGS = -Lxbyak_aarch64/lib -lxbyak_aarch64
+TARGET = bench
+SRCS = $(shell bash -c "ls src/*.cc")
+OBJS = $(SRCS:cc=o)
 
-all: bench
+all: $(TARGET)
 
-bench: main.cc
+%.o:%.cc
+	$(CXX) $(CXXFLAGS) -c -o $@ $< -MMD -MP -MF $(@:.o=.d)
+
+xbyak_aarch64/lib/libxbyak_aarch64.a:
+	$(MAKE) -C xbyak_aarch64
+
+$(TARGET): $(OBJS) xbyak_aarch64/lib/libxbyak_aarch64.a
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
-	$(RM) bench
+	$(RM) -f $(TARGET) src/*.{o,d}
 
 .PHONY: all
