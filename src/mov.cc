@@ -69,6 +69,65 @@ void bench_mov_vec(bool md, double freq) {
 	t.put("dup.h (elem)",               both(b, op( g->dup(d->v.h, s->w) ),                         op( g->mov(d->w, d->v.s[0]) ), mov_latency));
 	t.put("dup.s (elem)",               both(b, op( g->dup(d->v.s, s->w) ),                         op( g->mov(d->w, d->v.s[0]) ), mov_latency));
 	t.put("dup.d (elem)",               both(b, op( g->dup(d->v.d, s->x) ),                         op( g->mov(d->x, d->v.d[0]) ), mov_latency));
+
+	t.put("xtn.h",                      both(b, op( g->xtn(d->v.b8, s->v.h) )));
+	t.put("xtn.s",                      both(b, op( g->xtn(d->v.h4, s->v.s) )));
+	t.put("xtn.d",                      both(b, op( g->xtn(d->v.s2, s->v.d) )));
+
+	t.put("sqxtn.h (scl)",              both(b, op( g->sqxtn(d->b, s->h) )));
+	t.put("sqxtn.s (scl)",              both(b, op( g->sqxtn(d->h, s->s) )));
+	t.put("sqxtn.d (scl)",              both(b, op( g->sqxtn(d->s, s->d) )));
+
+	t.put("sqxtn.h (vec)",              both(b, op( g->sqxtn(d->v.b8, s->v.h) )));
+	t.put("sqxtn.s (vec)",              both(b, op( g->sqxtn(d->v.h4, s->v.s) )));
+	t.put("sqxtn.d (vec)",              both(b, op( g->sqxtn(d->v.s2, s->v.d) )));
+	t.put("sqxtn2.h (vec)",             both(b, op( g->sqxtn2(d->v.b, s->v.h) )));
+	t.put("sqxtn2.s (vec)",             both(b, op( g->sqxtn2(d->v.h, s->v.s) )));
+	t.put("sqxtn2.d (vec)",             both(b, op( g->sqxtn2(d->v.s, s->v.d) )));
+
+	t.put("uqxtn.h (scl)",              both(b, op( g->uqxtn(d->b, s->h) )));
+	t.put("uqxtn.s (scl)",              both(b, op( g->uqxtn(d->h, s->s) )));
+	t.put("uqxtn.d (scl)",              both(b, op( g->uqxtn(d->s, s->d) )));
+
+	t.put("uqxtn.h (vec)",              both(b, op( g->uqxtn(d->v.b8, s->v.h) )));
+	t.put("uqxtn.s (vec)",              both(b, op( g->uqxtn(d->v.h4, s->v.s) )));
+	t.put("uqxtn.d (vec)",              both(b, op( g->uqxtn(d->v.s2, s->v.d) )));
+	t.put("uqxtn2.h (vec)",             both(b, op( g->uqxtn2(d->v.b, s->v.h) )));
+	t.put("uqxtn2.s (vec)",             both(b, op( g->uqxtn2(d->v.h, s->v.s) )));
+	t.put("uqxtn2.d (vec)",             both(b, op( g->uqxtn2(d->v.s, s->v.d) )));
+
+	t.put("sqxtun.h (scl)",             both(b, op( g->sqxtun(d->b, s->h) )));
+	t.put("sqxtun.s (scl)",             both(b, op( g->sqxtun(d->h, s->s) )));
+	t.put("sqxtun.d (scl)",             both(b, op( g->sqxtun(d->s, s->d) )));
+
+	t.put("sqxtun.h (vec)",             both(b, op( g->sqxtun(d->v.b8, s->v.h) )));
+	t.put("sqxtun.s (vec)",             both(b, op( g->sqxtun(d->v.h4, s->v.s) )));
+	t.put("sqxtun.d (vec)",             both(b, op( g->sqxtun(d->v.s2, s->v.d) )));
+	t.put("sqxtun2.h (vec)",            both(b, op( g->sqxtun2(d->v.b, s->v.h) )));
+	t.put("sqxtun2.s (vec)",            both(b, op( g->sqxtun2(d->v.h, s->v.s) )));
+	t.put("sqxtun2.d (vec)",            both(b, op( g->sqxtun2(d->v.s, s->v.d) )));
+
+	t.put("sxtl.b (vec)",               both(b, op( g->sxtl(d->v.h, s->v.b8) )));
+	t.put("sxtl.h (vec)",               both(b, op( g->sxtl(d->v.s, s->v.h4) )));
+	t.put("sxtl.s (vec)",               both(b, op( g->sxtl(d->v.d, s->v.s2) )));
+	t.put("sxtl2.b (vec)",              both(b, op( g->sxtl2(d->v.h, s->v.b) )));
+	t.put("sxtl2.h (vec)",              both(b, op( g->sxtl2(d->v.s, s->v.h) )));
+	t.put("sxtl2.s (vec)",              both(b, op( g->sxtl2(d->v.d, s->v.s) )));
+
+	t.put("uxtl.b (vec)",               both(b, op( g->uxtl(d->v.h, s->v.b8) )));
+	t.put("uxtl.h (vec)",               both(b, op( g->uxtl(d->v.s, s->v.h4) )));
+	t.put("uxtl.s (vec)",               both(b, op( g->uxtl(d->v.d, s->v.s2) )));
+	t.put("uxtl2.b (vec)",              both(b, op( g->uxtl2(d->v.h, s->v.b) )));
+	t.put("uxtl2.h (vec)",              both(b, op( g->uxtl2(d->v.s, s->v.h) )));
+	t.put("uxtl2.s (vec)",              both(b, op( g->uxtl2(d->v.d, s->v.s) )));
+	return;
+}
+
+void bench_perm(bool md, double freq) {
+	table t(md, "Vector permutation");
+	bench b(freq, (size_t)0, 0);
+
+	// t.put("tbl (len == 1)",             both(b, op( g->tbl(d->v.b, g->v24, 1, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
 	return;
 }
 

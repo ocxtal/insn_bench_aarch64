@@ -57,6 +57,18 @@ int main(void) {
 	bench_cond_fp(md, freq);
 	bench_conv_fp_vec(md, freq);
 	return(0);
+
+
+	// printf("# measuring arithmetic and logic instruction latencies...\n");
+	// table t(md, "alu");
+	// bench b(freq, (size_t)0, 0);
+
+	// double const adc_latency = b.lat_(0, op( g->adc(d->x, s->x, s->x) )).lat;
+	// double const adds_adc_latency = b.lat_(0, op( g->adds(s->x, s->x, s->x); g->adc(d->x, s->x, s->x) )).lat;
+	// double const fill_rate = 2.0;
+
+	// t.put("cmhi.b (zero)",              both(b, op( g->cmhi(d->v.b, s->v.b, 0) )));
+	// t.put("cmhi.d (zero)",              both(b, op( g->cmhi(d->v.d, s->v.d, 0) )));
 }
 
 /*

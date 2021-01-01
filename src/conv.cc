@@ -12,19 +12,19 @@ void bench_conv_fp_vec(bool md, double freq) {
 
 	double const mov_latency = b.lat_(0, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )).lat / 2.0;
 
-	t.put("scvtf.h (vec; >>2)",         both(b, op( g->scvtf(d->v.h, s->v.h, 2) )));
-	t.put("scvtf.s (vec; >>2)",         both(b, op( g->scvtf(d->v.s, s->v.s, 2) )));
-	t.put("scvtf.d (vec; >>2)",         both(b, op( g->scvtf(d->v.d, s->v.d, 2) )));
-	t.put("scvtf2.h (vec; int)",        both(b, op( g->scvtf(d->v.h, s->v.h) )));
-	t.put("scvtf2.s (vec; int)",        both(b, op( g->scvtf(d->v.s, s->v.s) )));
-	t.put("scvtf2.d (vec; int)",        both(b, op( g->scvtf(d->v.d, s->v.d) )));
-
 	t.put("scvtf.h (scl; >>2)",         both(b, op( g->scvtf(d->h, s->w, 2) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
 	t.put("scvtf.s (scl; >>2)",         both(b, op( g->scvtf(d->s, s->w, 2) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
 	t.put("scvtf.d (scl; >>2)",         both(b, op( g->scvtf(d->d, s->x, 2) ), op( g->mov(d->x, d->v.d[0]) ), mov_latency));
-	t.put("scvtf2.h (scl; int)",        both(b, op( g->scvtf(d->h, s->w) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf2.s (scl; int)",        both(b, op( g->scvtf(d->s, s->w) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf2.d (scl; int)",        both(b, op( g->scvtf(d->d, s->x) ), op( g->mov(d->x, d->v.d[0]) ), mov_latency));
+	t.put("scvtf.h (scl; int)",         both(b, op( g->scvtf(d->h, s->w) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
+	t.put("scvtf.s (scl; int)",         both(b, op( g->scvtf(d->s, s->w) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
+	t.put("scvtf.d (scl; int)",         both(b, op( g->scvtf(d->d, s->x) ), op( g->mov(d->x, d->v.d[0]) ), mov_latency));
+
+	t.put("scvtf.h (vec; >>2)",         both(b, op( g->scvtf(d->v.h, s->v.h, 2) )));
+	t.put("scvtf.s (vec; >>2)",         both(b, op( g->scvtf(d->v.s, s->v.s, 2) )));
+	t.put("scvtf.d (vec; >>2)",         both(b, op( g->scvtf(d->v.d, s->v.d, 2) )));
+	t.put("scvtf.h (vec; int)",         both(b, op( g->scvtf(d->v.h, s->v.h) )));
+	t.put("scvtf.s (vec; int)",         both(b, op( g->scvtf(d->v.s, s->v.s) )));
+	t.put("scvtf.d (vec; int)",         both(b, op( g->scvtf(d->v.d, s->v.d) )));
 
 	t.put("fcvt (h -> s)",              both(b, op( g->fcvt(d->s, s->h) )));
 	t.put("fcvt (h -> d)",              both(b, op( g->fcvt(d->d, s->h) )));
