@@ -254,6 +254,7 @@ void bench_mul_vec(bool md, double freq) {
 	table t(md, "Vector multiplication and multiply-accumulate");
 	bench b(freq, (size_t)0, 0);
 
+	/* mul */
 	t.put("mul.b",                      both(b, op( g->mul(d->v.b, d->v.b, s->v.b) )));
 	t.put("mul.h",                      both(b, op( g->mul(d->v.h, d->v.h, s->v.h) )));
 	t.put("mul.s",                      both(b, op( g->mul(d->v.s, d->v.s, s->v.s) )));
@@ -273,6 +274,22 @@ void bench_mul_vec(bool md, double freq) {
 	t.put("smull2.h (elem; [7])",       both(b, op( g->smull2(d->v.s, d->v.h, s->v.h[7]) )));
 	t.put("smull2.s (elem; [0])",       both(b, op( g->smull2(d->v.d, d->v.s, s->v.s[0]) )));
 	t.put("smull2.s (elem; [3])",       both(b, op( g->smull2(d->v.d, d->v.s, s->v.s[3]) )));
+
+	t.put("umull.b (vec)",              both(b, op( g->umull(d->v.h, d->v.b8, s->v.b8) )));
+	t.put("umull.h (vec)",              both(b, op( g->umull(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("umull.s (vec)",              both(b, op( g->umull(d->v.d, d->v.s2, s->v.s2) )));
+	t.put("umull2.b (vec)",             both(b, op( g->umull2(d->v.h, d->v.b, s->v.b) )));
+	t.put("umull2.h (vec)",             both(b, op( g->umull2(d->v.s, d->v.h, s->v.h) )));
+	t.put("umull2.s (vec)",             both(b, op( g->umull2(d->v.d, d->v.s, s->v.s) )));
+
+	t.put("umull.h (elem; [0])",        both(b, op( g->umull(d->v.s, d->v.h4, s->v.h[0]) )));
+	t.put("umull.h (elem; [7])",        both(b, op( g->umull(d->v.s, d->v.h4, s->v.h[7]) )));
+	t.put("umull.s (elem; [0])",        both(b, op( g->umull(d->v.d, d->v.s2, s->v.s[0]) )));
+	t.put("umull.s (elem; [3])",        both(b, op( g->umull(d->v.d, d->v.s2, s->v.s[3]) )));
+	t.put("umull2.h (elem; [0])",       both(b, op( g->umull2(d->v.s, d->v.h, s->v.h[0]) )));
+	t.put("umull2.h (elem; [7])",       both(b, op( g->umull2(d->v.s, d->v.h, s->v.h[7]) )));
+	t.put("umull2.s (elem; [0])",       both(b, op( g->umull2(d->v.d, d->v.s, s->v.s[0]) )));
+	t.put("umull2.s (elem; [3])",       both(b, op( g->umull2(d->v.d, d->v.s, s->v.s[3]) )));
 
 	t.put("sqdmull.h (vec)",            both(b, op( g->sqdmull(d->v.s, d->v.h4, s->v.h4) )));
 	t.put("sqdmull.s (vec)",            both(b, op( g->sqdmull(d->v.d, d->v.s2, s->v.s2) )));
@@ -302,13 +319,10 @@ void bench_mul_vec(bool md, double freq) {
 	t.put("sqrdmulh.s (elem; v.s[0])",  both(b, op( g->sqrdmulh(d->v.s, d->v.s, s->v.s[0]) )));
 	t.put("sqrdmulh.s (elem; v.s[3])",  both(b, op( g->sqrdmulh(d->v.s, d->v.s, s->v.s[3]) )));
 
+	/* mla */
 	t.put("mla.b",                      both(b, op( g->mla(d->v.b, d->v.b, s->v.b) )));
 	t.put("mla.h",                      both(b, op( g->mla(d->v.h, d->v.h, s->v.h) )));
 	t.put("mla.s",                      both(b, op( g->mla(d->v.s, d->v.s, s->v.s) )));
-
-	t.put("mls.b",                      both(b, op( g->mls(d->v.b, d->v.b, s->v.b) )));
-	t.put("mls.h",                      both(b, op( g->mls(d->v.h, d->v.h, s->v.h) )));
-	t.put("mls.s",                      both(b, op( g->mls(d->v.s, d->v.s, s->v.s) )));
 
 	t.put("smlal.h (vec)",              both(b, op( g->smlal(d->v.s, d->v.h4, s->v.h4) )));
 	t.put("smlal.s (vec)",              both(b, op( g->smlal(d->v.d, d->v.s2, s->v.s2) )));
@@ -323,6 +337,20 @@ void bench_mul_vec(bool md, double freq) {
 	t.put("smlal2.h (elem; v.h[7])",    both(b, op( g->smlal2(d->v.s, d->v.h, s->v.h[7]) )));
 	t.put("smlal2.s (elem; v.s[0])",    both(b, op( g->smlal2(d->v.d, d->v.s, s->v.s[0]) )));
 	t.put("smlal2.s (elem; v.s[3])",    both(b, op( g->smlal2(d->v.d, d->v.s, s->v.s[3]) )));
+
+	t.put("umlal.h (vec)",              both(b, op( g->umlal(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("umlal.s (vec)",              both(b, op( g->umlal(d->v.d, d->v.s2, s->v.s2) )));
+	t.put("umlal2.h (vec)",             both(b, op( g->umlal2(d->v.s, d->v.h, s->v.h) )));
+	t.put("umlal2.s (vec)",             both(b, op( g->umlal2(d->v.d, d->v.s, s->v.s) )));
+
+	t.put("umlal.h (elem; v.h[0])",     both(b, op( g->umlal(d->v.s, d->v.h4, s->v.h[0]) )));
+	t.put("umlal.h (elem; v.h[7])",     both(b, op( g->umlal(d->v.s, d->v.h4, s->v.h[7]) )));
+	t.put("umlal.s (elem; v.s[0])",     both(b, op( g->umlal(d->v.d, d->v.s2, s->v.s[0]) )));
+	t.put("umlal.s (elem; v.s[3])",     both(b, op( g->umlal(d->v.d, d->v.s2, s->v.s[3]) )));
+	t.put("umlal2.h (elem; v.h[0])",    both(b, op( g->umlal2(d->v.s, d->v.h, s->v.h[0]) )));
+	t.put("umlal2.h (elem; v.h[7])",    both(b, op( g->umlal2(d->v.s, d->v.h, s->v.h[7]) )));
+	t.put("umlal2.s (elem; v.s[0])",    both(b, op( g->umlal2(d->v.d, d->v.s, s->v.s[0]) )));
+	t.put("umlal2.s (elem; v.s[3])",    both(b, op( g->umlal2(d->v.d, d->v.s, s->v.s[3]) )));
 
 	t.put("sqdmlal.h (vec)",            both(b, op( g->sqdmlal(d->v.s, d->v.h4, s->v.h4) )));
 	t.put("sqdmlal.s (vec)",            both(b, op( g->sqdmlal(d->v.d, d->v.s2, s->v.s2) )));
@@ -345,10 +373,15 @@ void bench_mul_vec(bool md, double freq) {
 	t.put("sqrdmlah.s (elem; v.s[0])",  both(b, op( g->sqrdmlah(d->v.s, d->v.s, s->v.s[0]) )));
 	t.put("sqrdmlah.s (elem; v.s[3])",  both(b, op( g->sqrdmlah(d->v.s, d->v.s, s->v.s[3]) )));
 
+	/* mls */
+	t.put("mls.b",                      both(b, op( g->mls(d->v.b, d->v.b, s->v.b) )));
+	t.put("mls.h",                      both(b, op( g->mls(d->v.h, d->v.h, s->v.h) )));
+	t.put("mls.s",                      both(b, op( g->mls(d->v.s, d->v.s, s->v.s) )));
+
 	t.put("smlsl.h (vec)",              both(b, op( g->smlsl(d->v.s, d->v.h4, s->v.h4) )));
 	t.put("smlsl.s (vec)",              both(b, op( g->smlsl(d->v.d, d->v.s2, s->v.s2) )));
 	t.put("smlsl2.h (vec)",             both(b, op( g->smlsl2(d->v.s, d->v.h, s->v.h) )));
-	t.put("smlsl2.s (vec)",             both(b, op( g->smlal2(d->v.d, d->v.s, s->v.s) )));
+	t.put("smlsl2.s (vec)",             both(b, op( g->smlsl2(d->v.d, d->v.s, s->v.s) )));
 
 	t.put("smlsl.h (elem; v.h[0])",     both(b, op( g->smlsl(d->v.s, d->v.h4, s->v.h[0]) )));
 	t.put("smlsl.h (elem; v.h[7])",     both(b, op( g->smlsl(d->v.s, d->v.h4, s->v.h[7]) )));
@@ -358,6 +391,20 @@ void bench_mul_vec(bool md, double freq) {
 	t.put("smlsl2.h (elem; v.h[7])",    both(b, op( g->smlsl2(d->v.s, d->v.h, s->v.h[7]) )));
 	t.put("smlsl2.s (elem; v.s[0])",    both(b, op( g->smlsl2(d->v.d, d->v.s, s->v.s[0]) )));
 	t.put("smlsl2.s (elem; v.s[3])",    both(b, op( g->smlsl2(d->v.d, d->v.s, s->v.s[3]) )));
+
+	t.put("umlsl.h (vec)",              both(b, op( g->umlsl(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("umlsl.s (vec)",              both(b, op( g->umlsl(d->v.d, d->v.s2, s->v.s2) )));
+	t.put("umlsl2.h (vec)",             both(b, op( g->umlsl2(d->v.s, d->v.h, s->v.h) )));
+	t.put("umlsl2.s (vec)",             both(b, op( g->umlsl2(d->v.d, d->v.s, s->v.s) )));
+
+	t.put("umlsl.h (elem; v.h[0])",     both(b, op( g->umlsl(d->v.s, d->v.h4, s->v.h[0]) )));
+	t.put("umlsl.h (elem; v.h[7])",     both(b, op( g->umlsl(d->v.s, d->v.h4, s->v.h[7]) )));
+	t.put("umlsl.s (elem; v.s[0])",     both(b, op( g->umlsl(d->v.d, d->v.s2, s->v.s[0]) )));
+	t.put("umlsl.s (elem; v.s[3])",     both(b, op( g->umlsl(d->v.d, d->v.s2, s->v.s[3]) )));
+	t.put("umlsl2.h (elem; v.h[0])",    both(b, op( g->umlsl2(d->v.s, d->v.h, s->v.h[0]) )));
+	t.put("umlsl2.h (elem; v.h[7])",    both(b, op( g->umlsl2(d->v.s, d->v.h, s->v.h[7]) )));
+	t.put("umlsl2.s (elem; v.s[0])",    both(b, op( g->umlsl2(d->v.d, d->v.s, s->v.s[0]) )));
+	t.put("umlsl2.s (elem; v.s[3])",    both(b, op( g->umlsl2(d->v.d, d->v.s, s->v.s[3]) )));
 
 	t.put("sqdmlsl.h (vec)",            both(b, op( g->sqdmlsl(d->v.s, d->v.h4, s->v.h4) )));
 	t.put("sqdmlsl.s (vec)",            both(b, op( g->sqdmlsl(d->v.d, d->v.s2, s->v.s2) )));
@@ -390,11 +437,27 @@ void bench_mul_vec(bool md, double freq) {
 	t.put("sdot.b (elem; v.b[0])",      both(b, op( g->sdot(d->v.s, d->v.b, s->v.b4[0]) )));
 	t.put("sdot.b (elem; v.b[3])",      both(b, op( g->sdot(d->v.s, d->v.b, s->v.b4[3]) )));
 
+	t.put("usdot.b (vec)",              both(b, op( g->usdot(d->v.s, d->v.b, s->v.b) )));
+	t.put("usdot.b (elem; v.b[0])",     both(b, op( g->usdot(d->v.s, d->v.b, s->v.b4[0]) )));
+	t.put("usdot.b (elem; v.b[3])",     both(b, op( g->usdot(d->v.s, d->v.b, s->v.b4[3]) )));
+
 	/* TODO */
 	// t.put("sudot.b (vec)",              both(b, op( g->sudot(d->v.s, d->v.b, s->v.b) )));
 	// t.put("sudot.b (elem; v.b[0])",     both(b, op( g->sudot(d->v.s, d->v.b, s->v.b4[0]) )));
 	// t.put("sudot.b (elem; v.b[3])",     both(b, op( g->sudot(d->v.s, d->v.b, s->v.b4[3]) )));
 	// t.put("smmla.b",                    both(b, op( g->smmla(d->v.s, d->v.b, s->v.b) )));
+	// t.put("ummla.b",                    both(b, op( g->ummla(d->v.s, d->v.b, s->v.b) )));
+	// t.put("usmmla.b",                   both(b, op( g->usmmla(d->v.s, d->v.b, s->v.b) )));
+	return;
+}
+
+static
+void bench_div_vec(bool md, double freq) {
+	table t(md, "Vector division");
+	bench b(freq, (size_t)0, 0);
+
+	t.put("urecpe.s",                   both(b, op( g->urecpe(d->v.s, d->v.s, s->v.s) )));
+	t.put("ursqrte.s",                  both(b, op( g->ursqrte(d->v.s, d->v.s, s->v.s) )));
 	return;
 }
 
@@ -461,6 +524,7 @@ void bench_arith_vec(bool md, double freq) {
 	bench_basic_arith_vec(md, freq);
 	bench_max_min_vec(md, freq);
 	bench_mul_vec(md, freq);
+	bench_div_vec(md, freq);
 	bench_ext_arith_vec(md, freq);
 	return;
 }

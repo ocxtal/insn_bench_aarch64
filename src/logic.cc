@@ -114,6 +114,7 @@ void bench_bitwise_logic_vec(bool md, double freq) {
 	t.put("eor.b",                      both(b, op( g->eor(d->v.b, d->v.b, s->v.b) )));
 	t.put("eor3.b",                     both(b, op( g->eor3(d->v.b, d->v.b, d->v.b, s->v.b) )));
 	t.put("rax1.d",                     both(b, op( g->rax1(d->v.d, d->v.d, s->v.d) )));
+	t.put("xar.d",                      both(b, op( g->bcax(d->v.d, d->v.d, s->v.d) )));
 
 	t.put("mvn.b",                      both(b, op( g->mvn(d->v.b, s->v.b) )));
 	t.put("mvni.h",                     both(b, op( g->mvni(d->v.h, 0x11, ShMod::LSL, 0) )));

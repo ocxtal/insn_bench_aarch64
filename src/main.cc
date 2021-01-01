@@ -36,26 +36,26 @@ int main(void) {
 	dump_uname_a(md);
 	double const freq = estimate_cpu_freq(md, 3);
 
-	bench_load(md, freq);
-	bench_store(md, freq);
-	bench_mov(md, freq);
-	bench_arith(md, freq);
-	bench_logic(md, freq);
-	bench_cmp(md, freq);
-	bench_cond(md, freq);
-	bench_crypto(md, freq);
+	// bench_load(md, freq);
+	// bench_store(md, freq);
+	// bench_mov(md, freq);
+	// bench_arith(md, freq);
+	// bench_logic(md, freq);
+	// bench_cmp(md, freq);
+	// bench_cond(md, freq);
+	// bench_crypto(md, freq);
 
-	bench_mov_vec(md, freq);
-	bench_arith_vec(md, freq);
-	bench_logic_vec(md, freq);
-	bench_cmp_vec(md, freq);
+	// bench_mov_vec(md, freq);
+	// bench_arith_vec(md, freq);
+	// bench_logic_vec(md, freq);
+	// bench_cmp_vec(md, freq);
 	bench_perm_vec(md, freq);
 
-	bench_arith_fp_vec(md, freq);
-	bench_math_fp_vec(md, freq);
-	bench_cmp_fp_vec(md, freq);
-	bench_cond_fp(md, freq);
-	bench_conv_fp_vec(md, freq);
+	// bench_arith_fp_vec(md, freq);
+	// bench_math_fp_vec(md, freq);
+	// bench_cmp_fp_vec(md, freq);
+	// bench_cond_fp(md, freq);
+	// bench_conv_fp_vec(md, freq);
 	return(0);
 
 

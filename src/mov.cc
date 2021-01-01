@@ -123,11 +123,39 @@ void bench_mov_vec(bool md, double freq) {
 	return;
 }
 
-void bench_perm(bool md, double freq) {
+void bench_perm_vec(bool md, double freq) {
 	table t(md, "Vector permutation");
 	bench b(freq, (size_t)0, 0);
 
-	// t.put("tbl (len == 1)",             both(b, op( g->tbl(d->v.b, g->v24, 1, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("ext.b (>>1)",                both(b, op( g->ext(d->v.b, d->v.b, s->v.b, 1) )));
+	t.put("ext.b (>>15)",               both(b, op( g->ext(d->v.b, d->v.b, s->v.b, 1) )));
+
+	t.put("tbl (len == 1)",             both(b, op( g->tbl(d->v.b, g->v24.b, 1, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("tbl (len == 2)",             both(b, op( g->tbl(d->v.b, g->v24.b, 2, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("tbl (len == 3)",             both(b, op( g->tbl(d->v.b, g->v24.b, 3, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("tbl (len == 4)",             both(b, op( g->tbl(d->v.b, g->v24.b, 4, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("tbx (len == 1)",             both(b, op( g->tbx(d->v.b, g->v24.b, 1, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("tbx (len == 2)",             both(b, op( g->tbx(d->v.b, g->v24.b, 2, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("tbx (len == 3)",             both(b, op( g->tbx(d->v.b, g->v24.b, 3, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("tbx (len == 4)",             both(b, op( g->tbx(d->v.b, g->v24.b, 4, s->v.b) ), 0.0, lat_patterns, thr_half_patterns));
+
+	t.put("trn1.b",                     both(b, op( g->trn1(d->v.b, d->v.b, s->v.b) )));
+	t.put("trn2.b",                     both(b, op( g->trn2(d->v.b, d->v.b, s->v.b) )));
+	t.put("trn1.h",                     both(b, op( g->trn1(d->v.h, d->v.h, s->v.h) )));
+	t.put("trn2.h",                     both(b, op( g->trn2(d->v.h, d->v.h, s->v.h) )));
+	t.put("trn1.s",                     both(b, op( g->trn1(d->v.s, d->v.s, s->v.s) )));
+	t.put("trn2.s",                     both(b, op( g->trn2(d->v.s, d->v.s, s->v.s) )));
+	t.put("trn1.d",                     both(b, op( g->trn1(d->v.d, d->v.d, s->v.d) )));
+	t.put("trn2.d",                     both(b, op( g->trn2(d->v.d, d->v.d, s->v.d) )));
+
+	t.put("zip1.b",                     both(b, op( g->zip1(d->v.b, d->v.b, s->v.b) )));
+	t.put("zip2.b",                     both(b, op( g->zip2(d->v.b, d->v.b, s->v.b) )));
+	t.put("zip1.h",                     both(b, op( g->zip1(d->v.h, d->v.h, s->v.h) )));
+	t.put("zip2.h",                     both(b, op( g->zip2(d->v.h, d->v.h, s->v.h) )));
+	t.put("zip1.s",                     both(b, op( g->zip1(d->v.s, d->v.s, s->v.s) )));
+	t.put("zip2.s",                     both(b, op( g->zip2(d->v.s, d->v.s, s->v.s) )));
+	t.put("zip1.d",                     both(b, op( g->zip1(d->v.d, d->v.d, s->v.d) )));
+	t.put("zip2.d",                     both(b, op( g->zip2(d->v.d, d->v.d, s->v.d) )));
 	return;
 }
 
