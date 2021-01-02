@@ -18,6 +18,7 @@ void bench_crypto(bool md, double freq);
 
 void bench_mov_vec(bool md, double freq);
 void bench_arith_vec(bool md, double freq);
+void bench_ext_arith_vec(bool md, double freq);
 void bench_logic_vec(bool md, double freq);
 void bench_cmp_vec(bool md, double freq);
 void bench_perm_vec(bool md, double freq);
@@ -47,9 +48,10 @@ int main(void) {
 
 	// bench_mov_vec(md, freq);
 	// bench_arith_vec(md, freq);
+	bench_ext_arith_vec(md, freq);
 	// bench_logic_vec(md, freq);
 	// bench_cmp_vec(md, freq);
-	bench_perm_vec(md, freq);
+	// bench_perm_vec(md, freq);
 
 	// bench_arith_fp_vec(md, freq);
 	// bench_math_fp_vec(md, freq);
