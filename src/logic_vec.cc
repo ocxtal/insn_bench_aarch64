@@ -22,14 +22,6 @@ void bench_bitwise_logic_vec(bool md, double freq) {
 
 	t.put("eor.b",                      both(b, op( g->eor(d->v.b, d->v.b, s->v.b) )));
 	t.put("eor3.b",                     both(b, op( g->eor3(d->v.b, d->v.b, d->v.b, s->v.b) )));
-	t.put("rax1.d",                     both(b, op( g->rax1(d->v.d, d->v.d, s->v.d) )));
-	t.put("xar.d",                      both(b, op( g->xar(d->v.d, d->v.d, s->v.d, 0x11) )));
-
-	t.put("mvn.b",                      both(b, op( g->mvn(d->v.b, s->v.b) )));
-	t.put("mvni.h",                     both(b, op( g->mvni(d->v.h, 0x11, ShMod::LSL, 0) )));
-	t.put("mvni.s",                     both(b, op( g->mvni(d->v.s, 0x11, ShMod::LSL, 0) )));
-	t.put("mvni.h",                     both(b, op( g->mvni(d->v.h, 0x11, ShMod::LSL, 8) )));
-	t.put("mvni.s",                     both(b, op( g->mvni(d->v.s, 0x11, ShMod::LSL, 8) )));
 
 	t.put("not.b",                      both(b, op( g->not_(d->v.b, s->v.b) )));
 	t.put("mvn.b",                      both(b, op( g->mvn(d->v.b, s->v.b) )));
@@ -37,6 +29,47 @@ void bench_bitwise_logic_vec(bool md, double freq) {
 	t.put("mvni.s",                     both(b, op( g->mvni(d->v.s, 0x11, ShMod::LSL, 0) )));
 	t.put("mvni.h",                     both(b, op( g->mvni(d->v.h, 0x11, ShMod::LSL, 8) )));
 	t.put("mvni.s",                     both(b, op( g->mvni(d->v.s, 0x11, ShMod::LSL, 8) )));
+	return;
+}
+
+static
+void bench_bitmanip_vec(bool md, double freq) {
+	table t(md, "Vector bit-manipulation instructions");
+	bench b(freq, (size_t)0, 0);
+
+	/* bitwise blend */
+	t.put("bic.b (reg)",                both(b, op( g->bic(d->v.b, d->v.b, s->v.b) )));
+	t.put("bic.h (imm)",                both(b, op( g->bic(d->v.h8, 0x11, ShMod::LSL, 0) )));
+	t.put("bic.h (imm; <<8)",           both(b, op( g->bic(d->v.h8, 0x11, ShMod::LSL, 8) )));
+	t.put("bic.s (imm)",                both(b, op( g->bic(d->v.s4, 0x11, ShMod::LSL, 0) )));
+	t.put("bic.s (imm; <<8)",           both(b, op( g->bic(d->v.s4, 0x11, ShMod::LSL, 8) )));
+	t.put("bif.b",                      both(b, op( g->bif(d->v.b, d->v.b, s->v.b) )));
+	t.put("bit.b",                      both(b, op( g->bit(d->v.b, d->v.b, s->v.b) )));
+	t.put("bsl.b",                      both(b, op( g->bsl(d->v.b, d->v.b, s->v.b) )));
+
+	/* complex logic */	
+	t.put("bcax.b",                     both(b, op( g->bcax(d->v.b, d->v.b, d->v.b, s->v.b) )));
+	t.put("rax1.d",                     both(b, op( g->rax1(d->v.d, d->v.d, s->v.d) )));
+	t.put("xar.d",                      both(b, op( g->xar(d->v.d, d->v.d, s->v.d, 0x11) )));
+
+	/* misc */
+	t.put("rbit.b",                     both(b, op( g->rbit(d->v.b, s->v.b) )));
+	t.put("rev16.b",                    both(b, op( g->rev16(d->v.b, s->v.b) )));
+	t.put("rev32.b",                    both(b, op( g->rev32(d->v.b, s->v.b) )));
+	t.put("rev32.h",                    both(b, op( g->rev32(d->v.h, s->v.h) )));
+	t.put("rev64.b",                    both(b, op( g->rev64(d->v.b, s->v.b) )));
+	t.put("rev64.h",                    both(b, op( g->rev64(d->v.h, s->v.h) )));
+	t.put("rev64.s",                    both(b, op( g->rev64(d->v.s, s->v.s) )));
+
+	t.put("cls.b",                      both(b, op( g->cls(d->v.b, s->v.b) )));
+	t.put("cls.h",                      both(b, op( g->cls(d->v.h, s->v.h) )));
+	t.put("cls.s",                      both(b, op( g->cls(d->v.s, s->v.s) )));
+	// t.put("cls.d",                      both(b, op( g->cls(d->v.d, s->v.d) )));
+	t.put("clz.b",                      both(b, op( g->clz(d->v.b, s->v.b) )));
+	t.put("clz.h",                      both(b, op( g->clz(d->v.h, s->v.h) )));
+	t.put("clz.s",                      both(b, op( g->clz(d->v.s, s->v.s) )));
+	// t.put("clz.d",                      both(b, op( g->clz(d->v.d, s->v.d) )));
+	t.put("cnt.b",                      both(b, op( g->cnt(d->v.b, s->v.b) )));
 	return;
 }
 
@@ -238,44 +271,6 @@ void bench_shift_vec(bool md, double freq) {
 	t.put("sri.h (vec; >>2)",           both(b, op( g->sri(d->v.h, s->v.h, 2) )));
 	t.put("sri.s (vec; >>2)",           both(b, op( g->sri(d->v.s, s->v.s, 2) )));
 	t.put("sri.d (vec; >>2)",           both(b, op( g->sri(d->v.d, s->v.d, 2) )));
-	return;
-}
-
-static
-void bench_bitmanip_vec(bool md, double freq) {
-	table t(md, "Vector bit-manipulation instructions");
-	bench b(freq, (size_t)0, 0);
-
-	/* bit set / clear */
-	t.put("bcax.b",                     both(b, op( g->bcax(d->v.b, d->v.b, d->v.b, s->v.b) )));
-	t.put("bic.h (imm)",                both(b, op( g->bic(d->v.h8, 0x11, ShMod::LSL, 0) )));
-	t.put("bic.h (imm; <<8)",           both(b, op( g->bic(d->v.h8, 0x11, ShMod::LSL, 8) )));
-	t.put("bic.s (imm)",                both(b, op( g->bic(d->v.s4, 0x11, ShMod::LSL, 0) )));
-	t.put("bic.s (imm; <<8)",           both(b, op( g->bic(d->v.s4, 0x11, ShMod::LSL, 8) )));
-
-	t.put("bic.b (reg)",                both(b, op( g->bic(d->v.b, d->v.b, s->v.b) )));
-	t.put("bif.b",                      both(b, op( g->bif(d->v.b, d->v.b, s->v.b) )));
-	t.put("bit.b",                      both(b, op( g->bit(d->v.b, d->v.b, s->v.b) )));
-	t.put("bsl.b",                      both(b, op( g->bsl(d->v.b, d->v.b, s->v.b) )));
-
-	/* misc */
-	t.put("rbit.b",                     both(b, op( g->rbit(d->v.b, s->v.b) )));
-	t.put("rev16.b",                    both(b, op( g->rev16(d->v.b, s->v.b) )));
-	t.put("rev32.b",                    both(b, op( g->rev32(d->v.b, s->v.b) )));
-	t.put("rev32.h",                    both(b, op( g->rev32(d->v.h, s->v.h) )));
-	t.put("rev64.b",                    both(b, op( g->rev64(d->v.b, s->v.b) )));
-	t.put("rev64.h",                    both(b, op( g->rev64(d->v.h, s->v.h) )));
-	t.put("rev64.s",                    both(b, op( g->rev64(d->v.s, s->v.s) )));
-
-	t.put("cls.b",                      both(b, op( g->cls(d->v.b, s->v.b) )));
-	t.put("cls.h",                      both(b, op( g->cls(d->v.h, s->v.h) )));
-	t.put("cls.s",                      both(b, op( g->cls(d->v.s, s->v.s) )));
-	// t.put("cls.d",                      both(b, op( g->cls(d->v.d, s->v.d) )));
-	t.put("clz.b",                      both(b, op( g->clz(d->v.b, s->v.b) )));
-	t.put("clz.h",                      both(b, op( g->clz(d->v.h, s->v.h) )));
-	t.put("clz.s",                      both(b, op( g->clz(d->v.s, s->v.s) )));
-	// t.put("clz.d",                      both(b, op( g->clz(d->v.d, s->v.d) )));
-	t.put("cnt.b",                      both(b, op( g->cnt(d->v.b, s->v.b) )));
 	return;
 }
 
