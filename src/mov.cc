@@ -8,7 +8,7 @@
 
 void bench_mov(bool md, double freq) {
 	table t(md, "Register move");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	/* decoder / allocation throughput */
 	t.put("nop",                        thr(b, op( g->nop() )));
@@ -32,9 +32,9 @@ void bench_mov(bool md, double freq) {
 
 void bench_mov_vec(bool md, double freq) {
 	table t(md, "Vector element move");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
-	double const mov_latency = b.lat_(0, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )).lat / 2.0;
+	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
 
 	t.put("mov.s (v.s[0] <-> w)",       lat(b, op( g->mov(d->v.s[0], s->w); g->mov(d->w, d->v.s[0]) )));
 	t.put("mov.d (v.d[0] <-> x)",       lat(b, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )));
@@ -125,7 +125,7 @@ void bench_mov_vec(bool md, double freq) {
 
 void bench_perm_vec(bool md, double freq) {
 	table t(md, "Vector permutation");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("ext.b (>>1)",                both(b, op( g->ext(d->v.b, d->v.b, s->v.b, 1) )));
 	t.put("ext.b (>>15)",               both(b, op( g->ext(d->v.b, d->v.b, s->v.b, 1) )));

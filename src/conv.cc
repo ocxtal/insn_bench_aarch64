@@ -8,9 +8,9 @@
 
 void bench_conv_fp_vec(bool md, double freq) {
 	table t(md, "Floating point conversion");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
-	double const mov_latency = b.lat_(0, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )).lat / 2.0;
+	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
 
 	t.put("scvtf.h (scl; >>2)",         both(b, op( g->scvtf(d->h, s->w, 2) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
 	t.put("scvtf.s (scl; >>2)",         both(b, op( g->scvtf(d->s, s->w, 2) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));

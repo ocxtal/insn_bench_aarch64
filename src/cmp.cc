@@ -8,10 +8,10 @@
 
 void bench_cmp(bool md, double freq) {
 	table t(md, "Compare and flag manipulation");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
-	double const adc_latency = b.lat_(0, op( g->adc(d->x, s->x, s->x) )).lat;
-	double const adds_adc_latency = b.lat_(0, op( g->adds(s->x, s->x, s->x); g->adc(d->x, s->x, s->x) )).lat;
+	double const adc_latency      = lat_i(freq, op( g->adc(d->x, d->x, s->x) ));
+	double const adds_adc_latency = lat_i(freq, op( g->adds(s->x, s->x, s->x); g->adc(d->x, d->x, s->x) ));
 
 	t.put("ccmn (reg; eq)",             both(b, op( g->ccmn(s->x, s->x, 0x2, Cond::EQ) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	t.put("ccmn (reg; lt)",             both(b, op( g->ccmn(s->x, s->x, 0x2, Cond::LT) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
@@ -36,7 +36,7 @@ void bench_cmp(bool md, double freq) {
 
 void bench_cmp_vec(bool md, double freq) {
 	table t(md, "Vector compare");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("cmeq.b (reg)",               both(b, op( g->cmeq(d->v.b, d->v.b, s->v.b) )));
 	t.put("cmeq.h (reg)",               both(b, op( g->cmeq(d->v.h, d->v.h, s->v.h) )));
@@ -95,7 +95,7 @@ void bench_cmp_vec(bool md, double freq) {
 
 void bench_cmp_fp_vec(bool md, double freq) {
 	table t(md, "Floating point (scalar / vector) compare");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("facge.h (scl)",              both(b, op( g->facge(d->h, d->h, s->h) )));
 	t.put("facge.s (scl)",              both(b, op( g->facge(d->s, d->s, s->s) )));

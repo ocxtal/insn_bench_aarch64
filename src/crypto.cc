@@ -8,7 +8,7 @@
 
 void bench_crypto(bool md, double freq) {
 	table t(md, "Hashing and cryptographic");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("crc32x",                     both(b, op( g->crc32x(d->w, d->w, s->x) )));
 	t.put("crc32cx",                    both(b, op( g->crc32cx(d->w, d->w, s->x) )));

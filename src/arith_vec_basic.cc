@@ -9,7 +9,7 @@
 static
 void bench_basic_arith_vec(bool md, double freq) {
 	table t(md, "Vector arithmetic basic");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("add.b",                      both(b, op( g->add(d->v.b, d->v.b, s->v.b) )));
 	t.put("add.h",                      both(b, op( g->add(d->v.h, d->v.h, s->v.h) )));
@@ -84,7 +84,7 @@ void bench_basic_arith_vec(bool md, double freq) {
 static
 void bench_extra_arith_vec(bool md, double freq) {
 	table t(md, "Vector arithmetic extra");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("saddl.b",                    both(b, op( g->saddl(d->v.h, d->v.b8, s->v.b8) )));
 	t.put("saddl.h",                    both(b, op( g->saddl(d->v.s, d->v.h4, s->v.h4) )));
@@ -210,7 +210,7 @@ void bench_extra_arith_vec(bool md, double freq) {
 static
 void bench_max_min_vec(bool md, double freq) {
 	table t(md, "Vector max / min");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("smax.b",                     both(b, op( g->smax(d->v.b, d->v.b, s->v.b) )));
 	t.put("smax.h",                     both(b, op( g->smax(d->v.h, d->v.h, s->v.h) )));
@@ -259,7 +259,7 @@ void bench_max_min_vec(bool md, double freq) {
 static
 void bench_abd_vec(bool md, double freq) {
 	table t(md, "Vector absolute difference");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("saba.b",                     both(b, op( g->saba(d->v.b, d->v.b, s->v.b) )));
 	t.put("saba.h",                     both(b, op( g->saba(d->v.h, d->v.h, s->v.h) )));

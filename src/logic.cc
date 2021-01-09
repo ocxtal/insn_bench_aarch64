@@ -9,7 +9,7 @@
 static
 void bench_bitwise_logic(bool md, double freq, double adc_latency) {
 	table t(md, "Logical instructions");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	/* basic bitwise logic */
 	t.put("and (reg)",                  both(b, op( g->and_(d->x, d->x, s->x) )));
@@ -47,7 +47,7 @@ void bench_bitwise_logic(bool md, double freq, double adc_latency) {
 static
 void bench_shift_bitmanip(bool md, double freq, double adc_latency) {
 	table t(md, "Shift and bit-manipulation instructions");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("lsl (reg) / lslv",           both(b, op( g->lsl(d->x, d->x, s->x) )));
 	t.put("lsl (imm)",                  both(b, op( g->lsl(d->x, s->x, 17) )));
@@ -89,8 +89,7 @@ void bench_shift_bitmanip(bool md, double freq, double adc_latency) {
 }
 
 void bench_logic(bool md, double freq) {
-	bench b(freq, (size_t)0, 0);
-	double const adc_latency = b.lat_(0, op( g->adc(d->x, s->x, s->x) )).lat;
+	double const adc_latency = lat_i(freq, op( g->adc(d->x, d->x, s->x) ));
 
 	bench_bitwise_logic(md, freq, adc_latency);
 	bench_shift_bitmanip(md, freq, adc_latency);

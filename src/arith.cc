@@ -9,9 +9,9 @@
 static
 void bench_basic_arith(bool md, double freq) {
 	table t(md, "Addition, subtraction, and negation");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
-	double const adc_latency = b.lat_(0, op( g->adc(d->x, s->x, s->x) )).lat;
+	double const adc_latency = lat_i(freq, op( g->adc(d->x, d->x, s->x) ));
 
 	t.put("add (reg)",                  both(b, op( g->add(d->x, d->x, s->x) )));
 	t.put("add (reg<<2)",               both(b, op( g->add(d->x, d->x, s->x, ShMod::LSL, 2) )));
@@ -64,7 +64,7 @@ void bench_basic_arith(bool md, double freq) {
 static
 void bench_mul(bool md, double freq) {
 	table t(md, "Multiplication and multiply-accumulate");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("mul",                        both(b, op( g->mul(d->x, d->x, s->x) )));
 	t.put("mneg",                       both(b, op( g->mneg(d->x, d->x, s->x) )));
@@ -88,7 +88,7 @@ void bench_mul(bool md, double freq) {
 static
 void bench_div(bool md, double freq) {
 	table t(md, "Division");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	/* FIXME: vary divisor value */
 	t.put("sdiv",                       both(b, op( g->sdiv(d->x, d->x, s->x) )));
@@ -99,7 +99,7 @@ void bench_div(bool md, double freq) {
 static
 void bench_signext(bool md, double freq) {
 	table t(md, "Sign extension");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("sxtb",                       both(b, op( g->sxtb(d->x, s->w) )));
 	t.put("sxth",                       both(b, op( g->sxth(d->x, s->w) )));

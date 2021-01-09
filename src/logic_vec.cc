@@ -9,7 +9,7 @@
 static
 void bench_bitwise_logic_vec(bool md, double freq) {
 	table t(md, "Vector bitwise logic instructions");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("and.b",                      both(b, op( g->and_(d->v.b, d->v.b, s->v.b) )));
 
@@ -35,7 +35,7 @@ void bench_bitwise_logic_vec(bool md, double freq) {
 static
 void bench_bitmanip_vec(bool md, double freq) {
 	table t(md, "Vector bit-manipulation instructions");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	/* bitwise blend */
 	t.put("bic.b (reg)",                both(b, op( g->bic(d->v.b, d->v.b, s->v.b) )));
@@ -76,7 +76,7 @@ void bench_bitmanip_vec(bool md, double freq) {
 static
 void bench_shift_vec(bool md, double freq) {
 	table t(md, "Vector shift instructions");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	/* shift left */
 	t.put("shl.b (imm; <<2)",           both(b, op( g->shl(d->v.b, s->v.b, 2) )));
@@ -144,12 +144,12 @@ void bench_shift_vec(bool md, double freq) {
 	t.put("sqrshl.s",                   both(b, op( g->sqrshl(d->v.s, d->v.s, s->v.s) )));
 	t.put("sqrshl.d",                   both(b, op( g->sqrshl(d->v.d, d->v.d, s->v.d) )));
 
-	t.put("shll.b (<<2)",               both(b, op( g->shll(d->v.h, s->v.b8, 2) )));
-	t.put("shll.h (<<2)",               both(b, op( g->shll(d->v.s, s->v.h4, 2) )));
-	t.put("shll.s (<<2)",               both(b, op( g->shll(d->v.d, s->v.s2, 2) )));
-	t.put("shll2.b (<<2)",              both(b, op( g->shll2(d->v.h, s->v.b, 2) )));
-	t.put("shll2.h (<<2)",              both(b, op( g->shll2(d->v.s, s->v.h, 2) )));
-	t.put("shll2.s (<<2)",              both(b, op( g->shll2(d->v.d, s->v.s, 2) )));
+	t.put("shll.b (<<8)",               both(b, op( g->shll(d->v.h, s->v.b8, 8) )));
+	t.put("shll.h (<<16)",               both(b, op( g->shll(d->v.s, s->v.h4, 16) )));
+	t.put("shll.s (<<32)",               both(b, op( g->shll(d->v.d, s->v.s2, 32) )));
+	t.put("shll2.b (<<8)",              both(b, op( g->shll2(d->v.h, s->v.b, 8) )));
+	t.put("shll2.h (<<16)",              both(b, op( g->shll2(d->v.s, s->v.h, 16) )));
+	t.put("shll2.s (<<32)",              both(b, op( g->shll2(d->v.d, s->v.s, 32) )));
 
 	t.put("sshll.b (<<2)",              both(b, op( g->sshll(d->v.h, s->v.b8, 2) )));
 	t.put("sshll.h (<<2)",              both(b, op( g->sshll(d->v.s, s->v.h4, 2) )));
@@ -276,8 +276,8 @@ void bench_shift_vec(bool md, double freq) {
 
 void bench_logic_vec(bool md, double freq) {
 	bench_bitwise_logic_vec(md, freq);
-	bench_shift_vec(md, freq);
 	bench_bitmanip_vec(md, freq);
+	bench_shift_vec(md, freq);
 	return;
 }
 

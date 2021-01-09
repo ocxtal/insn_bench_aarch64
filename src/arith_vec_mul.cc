@@ -9,7 +9,7 @@
 static
 void bench_mul_vec(bool md, double freq) {
 	table t(md, "Vector multiplication");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	/* mul */
 	t.put("mul.b (vec)",                both(b, op( g->mul(d->v.b, d->v.b, s->v.b) )));
@@ -92,7 +92,7 @@ void bench_mul_vec(bool md, double freq) {
 static
 void bench_mla_vec(bool md, double freq) {
 	table t(md, "Vector multiply-accumulate");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	/* mla */
 	t.put("mla.b (vec)",                both(b, op( g->mla(d->v.b, d->v.b, s->v.b) )));
@@ -232,7 +232,7 @@ void bench_mla_vec(bool md, double freq) {
 static
 void bench_recip_vec(bool md, double freq) {
 	table t(md, "Vector division");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("urecpe.s",                   both(b, op( g->urecpe(d->v.s, s->v.s) )));
 	t.put("ursqrte.s",                  both(b, op( g->ursqrte(d->v.s, s->v.s) )));

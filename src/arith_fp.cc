@@ -9,7 +9,7 @@
 static
 void bench_basic_arith_fp_vec(bool md, double freq) {
 	table t(md, "Floating point basic arithmetic");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("fadd.h (scl)",               both(b, op( g->fadd(d->h, d->h, s->h) )));
 	t.put("fadd.s (scl)",               both(b, op( g->fadd(d->s, d->s, s->s) )));
@@ -62,7 +62,7 @@ void bench_basic_arith_fp_vec(bool md, double freq) {
 static
 void bench_max_min_fp_vec(bool md, double freq) {
 	table t(md, "Floating point max / min");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("fmax.h (scl)",               both(b, op( g->fmax(d->h, d->h, s->h) )));
 	t.put("fmax.s (scl)",               both(b, op( g->fmax(d->s, d->s, s->s) )));
@@ -137,7 +137,7 @@ void bench_max_min_fp_vec(bool md, double freq) {
 static
 void bench_mul_fp_vec(bool md, double freq) {
 	table t(md, "Floating point multiplication and multiply-accumulate");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("fmul.h (scl)",               both(b, op( g->fmul(d->h, d->h, s->h) )));
 	t.put("fmul.s (scl)",               both(b, op( g->fmul(d->s, d->s, s->s) )));
@@ -211,7 +211,7 @@ void bench_mul_fp_vec(bool md, double freq) {
 static
 void bench_div_fp_vec(bool md, double freq) {
 	table t(md, "Floating point division and reciprocal");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	/* FIXME: fdiv */
 

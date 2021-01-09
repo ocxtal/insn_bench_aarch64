@@ -8,7 +8,7 @@
 
 void bench_math_fp_vec(bool md, double freq) {
 	table t(md, "Floating point math");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("fsqrt.h (scl)",              both(b, op( g->fsqrt(d->h, s->h) )));
 	t.put("fsqrt.s (scl)",              both(b, op( g->fsqrt(d->s, s->s) )));

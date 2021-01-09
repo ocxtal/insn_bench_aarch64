@@ -8,7 +8,7 @@
 
 void bench_cond(bool md, double freq) {
 	table t(md, "Conditional arithmetic and logic");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("csinc (eq)",                 both(b, op( g->csinc(d->x, d->x, s->x, Cond::EQ) )));
 	t.put("csinc (lt)",                 both(b, op( g->csinc(d->x, d->x, s->x, Cond::LT) )));
@@ -31,7 +31,7 @@ void bench_cond(bool md, double freq) {
 
 void bench_cond_fp(bool md, double freq) {
 	table t(md, "Floating point conditional select");
-	bench b(freq, (size_t)0, 0);
+	bench b(freq);
 
 	t.put("fcsel.h (eq)",               both(b, op( g->fcsel(d->h, d->h, s->h, Cond::EQ) )));
 	t.put("fcsel.h (le)",               both(b, op( g->fcsel(d->h, d->h, s->h, Cond::LE) )));

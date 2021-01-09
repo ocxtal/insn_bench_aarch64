@@ -8,7 +8,9 @@
 #include "utils.h"
 
 void bench_load(bool md, double freq);
+void bench_load_vec(bool md, double freq);
 void bench_store(bool md, double freq);
+void bench_store_vec(bool md, double freq);
 void bench_mov(bool md, double freq);
 void bench_arith(bool md, double freq);
 void bench_logic(bool md, double freq);
@@ -36,39 +38,37 @@ int main(void) {
 	dump_cpuinfo(md);
 	dump_uname_a(md);
 	double const freq = estimate_cpu_freq(md, 3);
+	// double const freq = 3200000000.0;
 
-	// bench_load(md, freq);
-	// bench_store(md, freq);
-	// bench_mov(md, freq);
-	// bench_arith(md, freq);
-	// bench_logic(md, freq);
-	// bench_cmp(md, freq);
-	// bench_cond(md, freq);
-	// bench_crypto(md, freq);
+	bench_load_vec(md, freq);
+	bench_load(md, freq);
+	bench_store(md, freq);
+	bench_store_vec(md, freq);
+	bench_mov(md, freq);
+	bench_arith(md, freq);
+	bench_logic(md, freq);
+	bench_cmp(md, freq);
+	bench_cond(md, freq);
+	bench_crypto(md, freq);
 
-	// bench_mov_vec(md, freq);
-	// bench_arith_vec(md, freq);
+	bench_mov_vec(md, freq);
+	bench_arith_vec(md, freq);
 	bench_ext_arith_vec(md, freq);
-	// bench_logic_vec(md, freq);
-	// bench_cmp_vec(md, freq);
-	// bench_perm_vec(md, freq);
+	bench_logic_vec(md, freq);
+	bench_cmp_vec(md, freq);
+	bench_perm_vec(md, freq);
 
-	// bench_arith_fp_vec(md, freq);
-	// bench_math_fp_vec(md, freq);
-	// bench_cmp_fp_vec(md, freq);
-	// bench_cond_fp(md, freq);
-	// bench_conv_fp_vec(md, freq);
+	bench_arith_fp_vec(md, freq);
+	bench_math_fp_vec(md, freq);
+	bench_cmp_fp_vec(md, freq);
+	bench_cond_fp(md, freq);
+	bench_conv_fp_vec(md, freq);
 	return(0);
 
 
 	// printf("# measuring arithmetic and logic instruction latencies...\n");
 	// table t(md, "alu");
 	// bench b(freq, (size_t)0, 0);
-
-	// double const adc_latency = b.lat_(0, op( g->adc(d->x, s->x, s->x) )).lat;
-	// double const adds_adc_latency = b.lat_(0, op( g->adds(s->x, s->x, s->x); g->adc(d->x, s->x, s->x) )).lat;
-	// double const fill_rate = 2.0;
-
 	// t.put("cmhi.b (zero)",              both(b, op( g->cmhi(d->v.b, s->v.b, 0) )));
 	// t.put("cmhi.d (zero)",              both(b, op( g->cmhi(d->v.d, s->v.d, 0) )));
 }

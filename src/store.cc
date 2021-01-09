@@ -13,6 +13,12 @@ void bench_store(bool md, double freq) {
 	return;
 }
 
+void bench_store_vec(bool md, double freq) {
+	(void)md;
+	(void)freq;
+	return;
+}
+
 /*
  * end of store.cc
  */
