@@ -28,7 +28,7 @@ void bench_bitwise_logic(bool md, double freq, double adc_latency) {
 	t.put("ands (reg>>17; rotate)",     both(b, op( g->ands(d->x, d->x, s->x, ShMod::ROR, 17) ),    op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	t.put("ands (mask imm)",            both(b, op( g->ands(d->x, s->x, 0x1ffc) ),                  op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
-	t.put("orr (reg)",                  both(b, op( g->orr(d->x, d->x, s->x) )));
+	t.put("orr (reg)",                  both(b, op( g->orr(d->x, g->x28, s->x) )));		/* to prevent from being mov */
 	t.put("orr (reg<<2)",               both(b, op( g->orr(d->x, d->x, s->x, ShMod::LSL, 2) )));
 	t.put("orr (mask imm)",             both(b, op( g->orr(d->x, s->x, 0x1ffc) )));
 	t.put("orn (reg)",                  both(b, op( g->orn(d->x, d->x, s->x) )));
