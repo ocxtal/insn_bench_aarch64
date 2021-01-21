@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 void bench_conv_fp_vec(bool md, double freq) {
-	table t(md, "Floating point conversion");
+	table t(md, "Floating point convert");
 	bench b(freq);
 
 	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;

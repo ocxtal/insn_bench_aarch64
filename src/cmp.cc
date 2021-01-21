@@ -6,36 +6,53 @@
 #include "utils.h"
 #include <stdlib.h>
 
+/* for std::max */
+#include <algorithm>
+
 void bench_cmp(bool md, double freq) {
-	table t(md, "Compare and flag manipulation");
+	table t(md, "Scalar integer compare and flag manip");
 	bench b(freq);
 
-	double const adc_latency      = lat_i(freq, op( g->adc(d->x, d->x, s->x) ));
-	double const adds_adc_latency = lat_i(freq, op( g->adds(s->x, s->x, s->x); g->adc(d->x, d->x, s->x) ));
+	double const adcs_latency = lat_i(freq, op( g->adcs(d->x, d->x, s->x) ));
+	#define thr_body(_i, _body) ({ \
+		thr(b, op( g->adds(s->x, s->x, g->x28); for(size_t j = 0; j < (_i); j++) { _body; } )).thr * (double)(_i); \
+	})
+	#define sweep(_body) ({ \
+		double const l = lat(b, op( g->adcs(s->x, s->x, g->x28); _body; ), adcs_latency).lat; \
+		double const t = std::max({ \
+			thr_body(1, _body), thr_body(2, _body), thr_body(3, _body), thr_body(4, _body), \
+			thr_body(5, _body), thr_body(6, _body), thr_body(7, _body), thr_body(8, _body) \
+		}); \
+		(measure_t){ .lat = l, .thr = t }; \
+	})
 
-	t.put("ccmn (reg; eq)",             both(b, op( g->ccmn(s->x, s->x, 0x2, Cond::EQ) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("ccmn (reg; lt)",             both(b, op( g->ccmn(s->x, s->x, 0x2, Cond::LT) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("ccmn (imm; eq)",             both(b, op( g->ccmn(s->x, 17, 0x2, Cond::EQ) ),             op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("ccmn (imm; lt)",             both(b, op( g->ccmn(s->x, 17, 0x2, Cond::LT) ),             op( g->adc(d->x, d->x, s->x) ), adc_latency));
+	t.put("ccmn (reg; eq)",             sweep( g->ccmn(s->x, g->x28, 0xf, Cond::EQ) ));
+	t.put("ccmn (reg; lt)",             sweep( g->ccmn(s->x, g->x28, 0xf, Cond::LT) ));
+	t.put("ccmn (imm; eq)",             sweep( g->ccmn(s->x, 17, 0xf, Cond::EQ) ));
+	t.put("ccmn (imm; lt)",             sweep( g->ccmn(s->x, 17, 0xf, Cond::LT) ));
+	t.put("ccmp (reg; eq)",             sweep( g->ccmp(s->x, g->x28, 0xf, Cond::EQ) ));
+	t.put("ccmp (reg; lt)",             sweep( g->ccmp(s->x, g->x28, 0xf, Cond::LT) ));
+	t.put("ccmp (imm; eq)",             sweep( g->ccmp(s->x, 17, 0xf, Cond::EQ) ));
+	t.put("ccmp (imm; lt)",             sweep( g->ccmp(s->x, 17, 0xf, Cond::LT) ));
 
-	t.put("ccmp (reg; eq)",             both(b, op( g->ccmp(s->x, s->x, 0x2, Cond::EQ) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("ccmp (reg; lt)",             both(b, op( g->ccmp(s->x, s->x, 0x2, Cond::LT) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("ccmp (imm; eq)",             both(b, op( g->ccmp(s->x, 17, 0x2, Cond::EQ) ),             op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("ccmp (imm; lt)",             both(b, op( g->ccmp(s->x, 17, 0x2, Cond::LT) ),             op( g->adc(d->x, d->x, s->x) ), adc_latency));
+	t.put("tst (reg)",                  sweep( g->tst(s->x, s->x) ));
+	t.put("tst (reg<<2)",               sweep( g->tst(s->x, s->x, ShMod::LSL, 2) ));
+	t.put("tst (imm)",                  sweep( g->tst(s->x, 0x1ffc) ));
 
-	t.put("cfinv",                      both(b, op( g->cfinv() ),                                   op( g->adc(d->x, d->x, s->x); g->adds(d->x, d->x, s->x) ), adds_adc_latency));
-	t.put("ccmp (imm; lt)",             both(b, op( g->ccmp(s->x, 17, 0x2, Cond::LT) ),             op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("rmif",                       both(b, op( g->rmif(s->x, 17, 0xf) ),                       op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("setf8",                      both(b, op( g->setf8(s->w) ),                               op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("setf16",                     both(b, op( g->setf16(s->w) ),                              op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("tst (reg)",                  both(b, op( g->tst(s->x, s->x) ),                           op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("tst (reg<<2)",               both(b, op( g->tst(s->x, s->x, ShMod::LSL, 2) ),            op( g->adc(d->x, d->x, s->x) ), adc_latency));
-	t.put("tst (imm)",                  both(b, op( g->tst(s->x, 0x1ffc) ),                         op( g->adc(d->x, d->x, s->x) ), adc_latency));
+	t.put("rmif",                       sweep( g->rmif(d->x, 17, 0xf) ));
+	t.put("setf8",                      sweep( g->setf8(d->w) ));
+	t.put("setf16",                     sweep( g->setf16(d->w) ));
+	t.put("cfinv",                      sweep( g->cfinv() ));
+	// t.put("axflag",                     sweep( g->axflag() ));
+	// t.put("xaflag",                     sweep( g->xaflag() ));
+
+	#undef thr_body
+	#undef sweep
 	return;
 }
 
 void bench_cmp_vec(bool md, double freq) {
-	table t(md, "Vector compare");
+	table t(md, "Vector integer compare");
 	bench b(freq);
 
 	t.put("cmeq.b (reg)",               both(b, op( g->cmeq(d->v.b, d->v.b, s->v.b) )));
@@ -94,7 +111,7 @@ void bench_cmp_vec(bool md, double freq) {
 }
 
 void bench_cmp_fp_vec(bool md, double freq) {
-	table t(md, "Floating point (scalar / vector) compare");
+	table t(md, "Floating point compare");
 	bench b(freq);
 
 	t.put("facge.h (scl)",              both(b, op( g->facge(d->h, d->h, s->h) )));
@@ -111,31 +128,48 @@ void bench_cmp_fp_vec(bool md, double freq) {
 	t.put("facgt.s (vec)",              both(b, op( g->facgt(d->v.s, d->v.s, s->v.s) )));
 	t.put("facgt.d (vec)",              both(b, op( g->facgt(d->v.d, d->v.d, s->v.d) )));
 
-	/* FIXME */
-	t.put("fcmp.h (reg)",               both(b, op( g->fcmp(s->h, s->h) )));
-	t.put("fcmp.h (zero)",              both(b, op( g->fcmp(s->h, 0.0) )));
-	t.put("fcmp.s (reg)",               both(b, op( g->fcmp(s->s, s->s) )));
-	t.put("fcmp.s (zero)",              both(b, op( g->fcmp(s->s, 0.0) )));
-	t.put("fcmp.d (reg)",               both(b, op( g->fcmp(s->d, s->d) )));
-	t.put("fcmp.d (zero)",              both(b, op( g->fcmp(s->d, 0.0) )));
-	t.put("fcmpe.h (reg)",              both(b, op( g->fcmpe(s->h, s->h) )));
-	t.put("fcmpe.h (zero)",             both(b, op( g->fcmpe(s->h, 0.0) )));
-	t.put("fcmpe.s (reg)",              both(b, op( g->fcmpe(s->s, s->s) )));
-	t.put("fcmpe.s (zero)",             both(b, op( g->fcmpe(s->s, 0.0) )));
-	t.put("fcmpe.d (reg)",              both(b, op( g->fcmpe(s->d, s->d) )));
-	t.put("fcmpe.d (zero)",             both(b, op( g->fcmpe(s->d, 0.0) )));
-	t.put("fccmp.h (eq)",               both(b, op( g->fccmp(s->h, s->h, 0x2, Cond::EQ) )));
-	t.put("fccmp.h (le)",               both(b, op( g->fccmp(s->h, s->h, 0x2, Cond::LE) )));
-	t.put("fccmp.s (eq)",               both(b, op( g->fccmp(s->s, s->s, 0x2, Cond::EQ) )));
-	t.put("fccmp.s (le)",               both(b, op( g->fccmp(s->s, s->s, 0x2, Cond::LE) )));
-	t.put("fccmp.d (eq)",               both(b, op( g->fccmp(s->d, s->d, 0x2, Cond::EQ) )));
-	t.put("fccmp.d (le)",               both(b, op( g->fccmp(s->d, s->d, 0x2, Cond::LE) )));
-	t.put("fccmpe.h (eq)",              both(b, op( g->fccmpe(s->h, s->h, 0x2, Cond::EQ) )));
-	t.put("fccmpe.h (le)",              both(b, op( g->fccmpe(s->h, s->h, 0x2, Cond::LE) )));
-	t.put("fccmpe.s (eq)",              both(b, op( g->fccmpe(s->s, s->s, 0x2, Cond::EQ) )));
-	t.put("fccmpe.s (le)",              both(b, op( g->fccmpe(s->s, s->s, 0x2, Cond::LE) )));
-	t.put("fccmpe.d (eq)",              both(b, op( g->fccmpe(s->d, s->d, 0x2, Cond::EQ) )));
-	t.put("fccmpe.d (le)",              both(b, op( g->fccmpe(s->d, s->d, 0x2, Cond::LE) )));
+	double const fcsel_latency = lat_i(freq, op( g->fcsel(d->d, d->d, s->d, Cond::EQ) ));
+	t.put("fcmp.h (reg)",               both(b, op( g->fcmp(s->h, s->h) ),  op( g->fcsel(d->h, d->h, s->h, Cond::EQ) ), fcsel_latency));
+	t.put("fcmp.h (zero)",              both(b, op( g->fcmp(s->h, 0.0) ),   op( g->fcsel(d->h, d->h, s->h, Cond::EQ) ), fcsel_latency));
+	t.put("fcmp.s (reg)",               both(b, op( g->fcmp(s->s, s->s) ),  op( g->fcsel(d->s, d->s, s->s, Cond::EQ) ), fcsel_latency));
+	t.put("fcmp.s (zero)",              both(b, op( g->fcmp(s->s, 0.0) ),   op( g->fcsel(d->s, d->s, s->s, Cond::EQ) ), fcsel_latency));
+	t.put("fcmp.d (reg)",               both(b, op( g->fcmp(s->d, s->d) ),  op( g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency));
+	t.put("fcmp.d (zero)",              both(b, op( g->fcmp(s->d, 0.0) ),   op( g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency));
+	t.put("fcmpe.h (reg)",              both(b, op( g->fcmpe(s->h, s->h) ), op( g->fcsel(d->h, d->h, s->h, Cond::EQ) ), fcsel_latency));
+	t.put("fcmpe.h (zero)",             both(b, op( g->fcmpe(s->h, 0.0) ),  op( g->fcsel(d->h, d->h, s->h, Cond::EQ) ), fcsel_latency));
+	t.put("fcmpe.s (reg)",              both(b, op( g->fcmpe(s->s, s->s) ), op( g->fcsel(d->s, d->s, s->s, Cond::EQ) ), fcsel_latency));
+	t.put("fcmpe.s (zero)",             both(b, op( g->fcmpe(s->s, 0.0) ),  op( g->fcsel(d->s, d->s, s->s, Cond::EQ) ), fcsel_latency));
+	t.put("fcmpe.d (reg)",              both(b, op( g->fcmpe(s->d, s->d) ), op( g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency));
+	t.put("fcmpe.d (zero)",             both(b, op( g->fcmpe(s->d, 0.0) ),  op( g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency));
+
+	/* chained compare */
+	#define thr_body(_i, _body) ({ \
+		thr(b, op( g->adds(s->x, s->x, g->x28); for(size_t j = 0; j < (_i); j++) { _body; } )).thr * (double)(_i); \
+	})
+	#define sweep(_body) ({ \
+		double const l = lat(b, op( _body; g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency).lat; \
+		double const t = std::max({ \
+			thr_body(1, _body), thr_body(2, _body), thr_body(3, _body), thr_body(4, _body), \
+			thr_body(5, _body), thr_body(6, _body), thr_body(7, _body), thr_body(8, _body) \
+		}); \
+		(measure_t){ .lat = l, .thr = t }; \
+	})
+
+	t.put("fccmp.h (eq)",               sweep( g->fccmp(s->h, s->h, 0xf, Cond::EQ) ));
+	t.put("fccmp.h (le)",               sweep( g->fccmp(s->h, s->h, 0xf, Cond::LE) ));
+	t.put("fccmp.s (eq)",               sweep( g->fccmp(s->s, s->s, 0xf, Cond::EQ) ));
+	t.put("fccmp.s (le)",               sweep( g->fccmp(s->s, s->s, 0xf, Cond::LE) ));
+	t.put("fccmp.d (eq)",               sweep( g->fccmp(s->d, s->d, 0xf, Cond::EQ) ));
+	t.put("fccmp.d (le)",               sweep( g->fccmp(s->d, s->d, 0xf, Cond::LE) ));
+	t.put("fccmpe.h (eq)",              sweep( g->fccmpe(s->h, s->h, 0xf, Cond::EQ) ));
+	t.put("fccmpe.h (le)",              sweep( g->fccmpe(s->h, s->h, 0xf, Cond::LE) ));
+	t.put("fccmpe.s (eq)",              sweep( g->fccmpe(s->s, s->s, 0xf, Cond::EQ) ));
+	t.put("fccmpe.s (le)",              sweep( g->fccmpe(s->s, s->s, 0xf, Cond::LE) ));
+	t.put("fccmpe.d (eq)",              sweep( g->fccmpe(s->d, s->d, 0xf, Cond::EQ) ));
+	t.put("fccmpe.d (le)",              sweep( g->fccmpe(s->d, s->d, 0xf, Cond::LE) ));
+
+	#undef thr_body
+	#undef sweep
 
 	t.put("fcmeq.h (scl)",              both(b, op( g->fcmeq(d->h, d->h, s->h) )));
 	t.put("fcmeq.s (scl)",              both(b, op( g->fcmeq(d->s, d->s, s->s) )));

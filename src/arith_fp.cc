@@ -8,7 +8,7 @@
 
 static
 void bench_basic_arith_fp_vec(bool md, double freq) {
-	table t(md, "Floating point basic arithmetic");
+	table t(md, "Floating point add, sub, abs, and neg");
 	bench b(freq);
 
 	t.put("fadd.h (scl)",               both(b, op( g->fadd(d->h, d->h, s->h) )));
@@ -136,7 +136,7 @@ void bench_max_min_fp_vec(bool md, double freq) {
 
 static
 void bench_mul_fp_vec(bool md, double freq) {
-	table t(md, "Floating point multiplication and multiply-accumulate");
+	table t(md, "Floating point mul, mul-acc, and fmadd");
 	bench b(freq);
 
 	t.put("fmul.h (scl)",               both(b, op( g->fmul(d->h, d->h, s->h) )));
@@ -210,7 +210,7 @@ void bench_mul_fp_vec(bool md, double freq) {
 
 static
 void bench_div_fp_vec(bool md, double freq) {
-	table t(md, "Floating point division and reciprocal");
+	table t(md, "Floating point div and recip");
 	bench b(freq);
 
 	/* FIXME: fdiv */

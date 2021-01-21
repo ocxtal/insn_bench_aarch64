@@ -8,7 +8,7 @@
 
 static
 void bench_mul_vec(bool md, double freq) {
-	table t(md, "Vector multiplication");
+	table t(md, "Vector integer mul");
 	bench b(freq);
 
 	/* mul */
@@ -91,7 +91,7 @@ void bench_mul_vec(bool md, double freq) {
 
 static
 void bench_mla_vec(bool md, double freq) {
-	table t(md, "Vector multiply-accumulate");
+	table t(md, "Vector integer mul-acc");
 	bench b(freq);
 
 	/* mla */
@@ -231,7 +231,7 @@ void bench_mla_vec(bool md, double freq) {
 
 static
 void bench_recip_vec(bool md, double freq) {
-	table t(md, "Vector division");
+	table t(md, "Vector integer div");
 	bench b(freq);
 
 	t.put("urecpe.s",                   both(b, op( g->urecpe(d->v.s, s->v.s) )));

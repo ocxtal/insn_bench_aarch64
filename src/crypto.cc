@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 void bench_crypto(bool md, double freq) {
-	table t(md, "Hashing and cryptographic");
+	table t(md, "Hash and crypto");
 	bench b(freq);
 
 	t.put("crc32x",                     both(b, op( g->crc32x(d->w, d->w, s->x) )));

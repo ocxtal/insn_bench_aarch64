@@ -17,22 +17,27 @@
 #endif
 // #define _DEFAULT_SOURCE
 
+/* C */
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
 #include <setjmp.h>
 #include <signal.h>
 #include <time.h>
-#include <functional>
-#include <arm_neon.h>
 
+/* C++ */
+#include <functional>
+#include <random>
+
+/* arm */
+#include <arm_neon.h>
 #include "xbyak_aarch64.h"
 using namespace Xbyak_aarch64;
 
 /*
  * forward declarations for exported functions
  */
-void init(bool md);
+void init(bool md, size_t core);
 void dump_uname_a(bool md);
 void dump_cpuinfo(bool md);
 double estimate_cpu_freq(bool md, size_t trials);
@@ -66,8 +71,8 @@ struct measure_t {
  */
 extern jmp_buf jb;
 #define try_setjmp(_body) ({ \
-	/* measure_t const r = sigsetjmp(jb, 1) == 0 ? ( _body ) : (measure_t){ -1.0, -1.0 }; */ \
-	measure_t const r = ( _body ); \
+	measure_t const r = sigsetjmp(jb, 1) == 0 ? ( _body ) : (measure_t){ -1.0, -1.0 }; \
+	/* measure_t const r = ( _body ); */ \
 	r; \
 })
 
@@ -327,7 +332,8 @@ static pattern_t const *thr_patterns[] = {
 #endif
 	NULL
 };
-static pattern_t const **thr_skip1_patterns = thr_patterns;
+static pattern_t const **thr_skip1_patterns  = thr_patterns;
+static pattern_t const **thr_skip1x_patterns = thr_patterns;
 
 /* for instructions with four-bit operand fields */
 dec_thr(4, 3, 1, 120, 1);
@@ -354,6 +360,7 @@ static pattern_t const *thr_half_patterns[] = {
 /* for ldp and ld{2,3,4} */
 dec_thr(24, 1, 1, 120, 2);
 dec_thr(25, 1, 1, 120, 2);
+dec_thr(26, 1, 1, 120, 2);
 dec_thr(27, 1, 1, 120, 2);
 dec_thr(28, 1, 1, 120, 2);
 
@@ -364,7 +371,14 @@ static pattern_t const *thr_skip2_patterns[] = {
 	ptr_thr(28, 1, 1, 120, 2),
 	NULL
 };
+static pattern_t const *thr_skip2x_patterns[] = {
+	ptr_thr(24, 1, 1, 120, 2),
+	ptr_thr(26, 1, 1, 120, 2),
+	ptr_thr(28, 1, 1, 120, 2),
+	NULL
+};
 
+dec_thr(21, 1, 1, 120, 3);
 dec_thr(24, 1, 1, 120, 3);
 dec_thr(25, 1, 1, 120, 3);
 dec_thr(27, 1, 1, 120, 3);
@@ -377,7 +391,14 @@ static pattern_t const *thr_skip3_patterns[] = {
 	ptr_thr(28, 1, 1, 120, 3),
 	NULL
 };
+static pattern_t const *thr_skip3x_patterns[] = {
+	ptr_thr(21, 1, 1, 120, 3),
+	ptr_thr(24, 1, 1, 120, 3),
+	ptr_thr(27, 1, 1, 120, 3),
+	NULL
+};
 
+dec_thr(20, 1, 1, 120, 4);
 dec_thr(24, 1, 1, 120, 4);
 dec_thr(25, 1, 1, 120, 4);
 dec_thr(27, 1, 1, 120, 4);
@@ -387,6 +408,12 @@ static pattern_t const *thr_skip4_patterns[] = {
 	ptr_thr(24, 1, 1, 120, 4),
 	ptr_thr(25, 1, 1, 120, 4),
 	ptr_thr(27, 1, 1, 120, 4),
+	ptr_thr(28, 1, 1, 120, 4),
+	NULL
+};
+static pattern_t const *thr_skip4x_patterns[] = {
+	ptr_thr(20, 1, 1, 120, 4),
+	ptr_thr(24, 1, 1, 120, 4),
 	ptr_thr(28, 1, 1, 120, 4),
 	NULL
 };
@@ -427,12 +454,12 @@ public:
 
 /* op generation function template and helper */
 // typedef void (*op_t)(CodeGenerator *g, AReg const *r);
-typedef std::function<void (CodeGenerator *, AReg const *, AReg const *)> op_t;
-#define op(_body)			( [](CodeGenerator *g, AReg const *d, AReg const *s) { (void)g; (void)d; (void)s; _body; } )
-#define op_cap(_body)		( [=](CodeGenerator *g, AReg const *d, AReg const *s) { (void)g; (void)d; (void)s; _body; } )
+typedef std::function<size_t (CodeGenerator *, AReg const *, AReg const *, Label *)> op_t;
+#define op(_body)			( [ ](CodeGenerator *g, AReg const *d, AReg const *s, Label *gl) -> size_t { (void)g; (void)d; (void)s; (void)gl; _body; return(1); } )
+#define op_cap(_body)		( [=](CodeGenerator *g, AReg const *d, AReg const *s, Label *gl) -> size_t { (void)g; (void)d; (void)s; (void)gl; _body; return(1); } )
 
-typedef std::function<void (CodeGenerator *)> op_init_t;
-#define op_init(_body)		( [](CodeGenerator *g) { (void)g; _body; } )
+typedef std::function<void (CodeGenerator *, Label *)> op_init_t;
+#define op_init(_body)		( [](CodeGenerator *g, Label *gl) { (void)g; (void)gl; _body; } )
 
 /* measure only latency */
 #define lat_i(_freq, _op) ({ \
@@ -522,37 +549,39 @@ private:
 	}
 
 	/* pattern generator */
-	static size_t const n_insns_base = (size_t)4 * 21 * 900 * 1001;
-	size_t const n_insns = n_insns_base;
+	static size_t const n_insns_tot_base = (size_t)4 * 21 * 900 * 1001;
+	size_t const n_insns_tot  = n_insns_tot_base;
+	size_t const n_insns_body = 1;
 
 	/* pattern: (count, pitch, offset, mod) */
 	size_t count_insns(pattern_t const *p) {
 		if(p == NULL || p->count == 0) { return(1); }
 		return(p->count * count_insns(p + 1));
 	}
-	void expand(op_t fp, pattern_t const *p, size_t base) {
+	void expand(op_t fp, Label *l, pattern_t const *p, size_t base) {
 		if(p == NULL || p->count == 0) {
 			// assert(base < 30);
 			size_t const offset = p[-1].offset;
 			size_t const mod = p[-1].mod;
-			fp(this, &regs[(base + offset) % mod], &regs[base % mod]);
+			fp(this, &regs[(base + offset) % mod], &regs[base % mod], l);
 			return;
 		}
 		for(size_t i = 0; i < p->count; i++) {
-			expand(fp, p + 1, i * p->pitch + base);
+			expand(fp, l, p + 1, i * p->pitch + base);
 		}
 		return;
 	}
-	void expand(op_t fp, pattern_t const *p) {
+	void expand(op_t fp, op_init_t fp_clear, Label *l, pattern_t const *p) {
 		/* loop counter; roundup fractions */
 		size_t const count = count_insns(p);
-		mov(x29, (n_insns + count - 1) / count);
+		mov(x29, (n_insns_tot + count - 1) / count);
 
 		/* core loop */
-		align(64);
+		align(128);
 		Label loop = L();
 		{
-			expand(fp, p, 0);
+			fp_clear(this, l);
+			expand(fp, l, p, 0);
 			subs(x29, x29, 1);
 			bne(loop);
 		}
@@ -567,7 +596,7 @@ private:
 			regs[i] = regs_rot[i % mod];
 		}
 	}
-	double run(op_t fp_body, op_init_t fp_init, pattern_t const *p) {
+	double run(op_t fp_body, op_init_t fp_init, op_init_t fp_clear, pattern_t const *p) {
 		/* initialize reglist */
 		init_reglist(p);
 
@@ -575,18 +604,26 @@ private:
 		reset(); setProtectModeRW();
 
 		/* save registers, core loop, and restore registers */
-		head(); fp_init(this); seed(); expand(fp_body, p); tail(); ready();
+		Label l;
+		head(); fp_init(this, &l); seed(); expand(fp_body, fp_clear, &l, p); tail(); ready();
 
 		/* generate the code for the loop; then run twice. first is for warming up. */
 		auto fn = getCode<void (*)(size_t xs, size_t xc, uint8x16_t vs, uint8x16_t vc)>();
-		fn(xseed, xconst, vseed, vconst);	/* warmup */
+
+		/* warmup */
+		fn(xseed, xconst, vseed, vconst);
+
+		/* measure */
 		size_t const ns = measure_nsec({ fn(xseed, xconst, vseed, vconst); });
-		return((double)ns * freq / ((double)n_insns * 1000000000.0));
+		return(
+			  ((double)ns * freq)
+			/ ((double)n_insns_tot * (double)n_insns_body * 1000000000.0)
+		);
 	}
-	double run(op_t fp_body, op_init_t fp_init, pattern_t const **q, size_t line = 0) {
+	double run(op_t fp_body, op_init_t fp_init, op_init_t fp_clear, pattern_t const **q, size_t line = 0) {
 		double res = 1000000000.0;
 		while(*q != NULL) {
-			double const r = run(fp_body, fp_init, *q++);
+			double const r = run(fp_body, fp_init, fp_clear, *q++);
 			if(line != 0) {
 				printf("#%zu\t%zu_%zu_%zu_%zu\t%.3f\n", line, q[-1][3].count, q[-1][1].count, q[-1][2].count, q[-1][0].count, 1.0 / r);
 			}
@@ -596,20 +633,26 @@ private:
 	}
 
 public:
+	/* global label for creating subroutine */
+	Label glabel;
+
+	/* constructors */
 	bench(
 		double const &_freq,
 		size_t const &_xseed,
 		size_t const &_xconst,
 		uint8x16_t const &_vseed,
 		uint8x16_t const &_vconst,
-		size_t const &_rep
-	) : CodeGenerator(65536),
+		size_t const &_rep,
+		size_t const &_denom
+	) : CodeGenerator(4 * 1024 * 1024),
 		freq(_freq),
 		xseed(_xseed),
 		xconst(_xconst),
 		vseed(_vseed),
 		vconst(_vconst),
-		n_insns(_rep * n_insns_base) {
+		n_insns_tot((_rep * n_insns_tot_base) / _denom),
+		n_insns_body(_denom) {
 	}
 	bench(
 		double const &_freq,
@@ -617,8 +660,9 @@ public:
 		size_t const &_xconst = 1,
 		uint8_t const &_vseed = 1,
 		uint8_t const &_vconst = 1,
-		size_t const &_rep = 1
-	) : bench(_freq, _xseed, _xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst), _rep) {
+		size_t const &_rep = 1,
+		size_t const &_denom = 1
+	) : bench(_freq, _xseed, _xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst), _rep, _denom) {
 	}
 	bench(
 		double const &_freq,
@@ -626,8 +670,9 @@ public:
 		void *const &_xconst = NULL,
 		uint8_t const &_vseed = 1,
 		uint8_t const &_vconst = 1,
-		size_t const &_rep = 1
-	) : bench(_freq, (size_t)_xseed, (size_t)_xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst), _rep) {
+		size_t const &_rep = 1,
+		size_t const &_denom = 1
+	) : bench(_freq, (size_t)_xseed, (size_t)_xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst), _rep, _denom) {
 	}
 
 	void print_pattern(FILE *fp, pattern_t const *p, size_t base = 0) {
@@ -642,75 +687,64 @@ public:
 		}
 	}
 
-	measure_t lat_(size_t line, op_t fp_body, op_init_t fp_init, double offset = 0.0, pattern_t const **q = lat_patterns) {
+	measure_t lat_(size_t line, op_t fp_body,                                        double offset = 0.0, pattern_t const **q = lat_patterns) {
+		return(lat_(line, fp_body, op_init(), op_init(), offset, q));
+	}
+	measure_t lat_(size_t line, op_t fp_body, op_init_t fp_init,                     double offset = 0.0, pattern_t const **q = lat_patterns) {
+		return(lat_(line, fp_body, fp_init,   op_init(), offset, q));
+	}
+	measure_t lat_(size_t line, op_t fp_body, op_init_t fp_init, op_init_t fp_clear, double offset = 0.0, pattern_t const **q = lat_patterns) {
 		(void)line;
 		return((measure_t){
-			.lat = run(fp_body, fp_init, q) - offset,
+			.lat = run(fp_body, fp_init, fp_clear, q) - offset,
 			.thr = 0.0
 		});
 	}
-	measure_t thr_(size_t line, op_t fp_body, op_init_t fp_init, pattern_t const **q = thr_patterns) {
+
+	measure_t thr_(size_t line, op_t fp_body,                                        pattern_t const **q = thr_patterns) {
+		return(thr_(line, fp_body, op_init(), op_init(), q));
+	}
+	measure_t thr_(size_t line, op_t fp_body, op_init_t fp_init,                     pattern_t const **q = thr_patterns) {
+		return(thr_(line, fp_body, fp_init,   op_init(), q));
+	}
+	measure_t thr_(size_t line, op_t fp_body, op_init_t fp_init, op_init_t fp_clear, pattern_t const **q = thr_patterns) {
 		(void)line;
 		return((measure_t){
 			.lat = 0.0,
-			.thr = 1.0 / run(fp_body, fp_init, q, line)
+			.thr = 1.0 / run(fp_body, fp_init, fp_clear, q, line)
 		});
 	}
-	measure_t both_(
-		size_t line,
-		op_t fp_body, op_t fp_collect, op_init_t fp_init,
-		double offset = 0.0,
-		pattern_t const **lq = lat_patterns,
-		pattern_t const **tq = thr_patterns
-	) {
+
+	measure_t both_(size_t line, op_t fp_body,                                                         double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
+		return(both_(line, fp_body, op(),       op_init(), op_init(), offset, lq, tq));
+	}
+	measure_t both_(size_t line, op_t fp_body,                  op_init_t fp_init,                     double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
+		return(both_(line, fp_body, op(),       fp_init,   op_init(), offset, lq, tq));
+	}
+	measure_t both_(size_t line, op_t fp_body,                  op_init_t fp_init, op_init_t fp_clear, double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
+		return(both_(line, fp_body, op(),       fp_init,   fp_clear,  offset, lq, tq));
+	}
+	measure_t both_(size_t line, op_t fp_body, op_t fp_collect,                                        double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
+		return(both_(line, fp_body, fp_collect, op_init(), op_init(), offset, lq, tq));
+	}
+	measure_t both_(size_t line, op_t fp_body, op_t fp_collect, op_init_t fp_init, op_init_t fp_clear, double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
 		return((measure_t){
 			.lat = lat_(
 				line,
-				op_cap( fp_body(g, d, s); fp_collect(g, d, s) ),
-				fp_init,
+				op_cap( fp_body(g, d, s, gl); fp_collect(g, d, s, gl) ),
+				fp_init, fp_clear,
 				offset, lq
 			).lat,
-			.thr = thr_(line, fp_body, fp_init, tq).thr
+			.thr = thr_(line, fp_body, fp_init, fp_clear, tq).thr
 		});
-	}
-	measure_t lat_(size_t line, op_t fp_body, double offset = 0.0, pattern_t const **q = lat_patterns) {
-		return(lat_(line, fp_body, op_init(), offset, q));
-	}
-	measure_t thr_(size_t line, op_t fp_body, pattern_t const **q = thr_patterns) {
-		return(thr_(line, fp_body, op_init(), q));
-	}
-	measure_t both_(
-		size_t line,
-		op_t fp_body, op_t fp_collect,
-		double offset = 0.0,
-		pattern_t const **lq = lat_patterns,
-		pattern_t const **tq = thr_patterns
-	) {
-		return(both_(line, fp_body, fp_collect, op_init(), offset, lq, tq));
-	}
-	measure_t both_(
-		size_t line,
-		op_t fp_body, op_init_t fp_init,
-		double offset = 0.0,
-		pattern_t const **lq = lat_patterns,
-		pattern_t const **tq = thr_patterns
-	) {
-		return(both_(line, fp_body, op(), fp_init, offset, lq, tq));
-	}
-	measure_t both_(
-		size_t line,
-		op_t fp,
-		double offset = 0.0,
-		pattern_t const **lq = lat_patterns,
-		pattern_t const **tq = thr_patterns
-	) {
-		return(both_(line, fp, op(), op_init(), offset, lq, tq));
 	}
 };
 
 /* memory manager for load / store bench */
-typedef void *(*mem_init_t)(void **p, size_t i, size_t n);
-#define mem_init(_body) [](void **p, size_t i, size_t n) -> void * { (void)p; (void)i; (void)n; return( _body ); }
+class memmgr;		/* forward declaration */
+
+typedef void *(*mem_init_t)(memmgr *g, void **p, size_t i, size_t n);
+#define mem_init(_body) [](memmgr *g, void **p, size_t i, size_t n) -> void * { (void)g; (void)p; (void)i; (void)n; return( _body ); }
 
 #ifdef __APPLE__
 #  define PAGE_SIZE			( 16 * 1024 )
@@ -726,18 +760,27 @@ private:
 	size_t offset;
 	static size_t const page_size = PAGE_SIZE;
 
+	/* random source */
+	std::mt19937_64 mt;
+
 	uint8_t *aligned_malloc(size_t size, size_t align) {
 		void *p = NULL;
 		posix_memalign(&p, align, size);
 		return((uint8_t *)p);
 	}
 public:
-	memmgr(mem_init_t fp, size_t _offset = 0, size_t n_pages = 2) : base(NULL), offset(_offset) {
+	memmgr(
+		mem_init_t fp,
+		size_t const &_offset = 0,
+		size_t const &n_pages = 2,
+		uint64_t const &_rseed = 42
+	) : base(NULL), offset(_offset), mt(_rseed) {
+
 		size_t const size = n_pages * page_size;
 		base = aligned_malloc(size, page_size);
 		void **p = ptr();
 		for(size_t i = 0; i < size / sizeof(void *); i++) {
-			p[i] = fp(p, i, size);
+			p[i] = fp(this, p, i, size);
 		}
 	}
 	~memmgr() {
@@ -746,6 +789,9 @@ public:
 	void **ptr() {
 		if(base == NULL) { return(NULL); }
 		return((void **)&base[offset]);
+	}
+	void *rnd() {
+		return((void *)mt());
 	}
 };
 

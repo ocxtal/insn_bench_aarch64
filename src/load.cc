@@ -4,12 +4,11 @@
  * @brief measure load latencies
  * @author Hajime Suzuki
  */
-// #define _POSIX_C_SOURCE		( 200112L )
 #include "utils.h"
 #include <stdlib.h>
 
 void bench_load(bool md, double freq) {
-	table t(md, "Load instructions");
+	table t(md, "Scalar load");
 
 	memmgr m_h(mem_init( p ));
 	memmgr m_u(mem_init( p ), 1);
@@ -146,14 +145,11 @@ void bench_load(bool md, double freq) {
 	t.put("ldpsw (ofs = 0; 1st elem; unaligned)",   both(y, op( g->add(s->x, s->x, g->x28); g->ldpsw(d[1].x, d[0].x, ptr(s->x)) ), op_init( g->eor(g->x0, g->x0, g->x0) ), add_latency, lat_inc2_pattern, thr_skip2_patterns));
 	t.put("ldpsw (ofs = 0; 2nd elem; unaligned)",   both(y, op( g->add(s->x, s->x, g->x28); g->ldpsw(d[0].x, d[1].x, ptr(s->x)) ), op_init( g->eor(g->x0, g->x0, g->x0) ), add_latency, lat_inc2_pattern, thr_skip2_patterns));
 	t.put("ldnp",                                   thr(h,  op(                             g->ldnp(d[0].x, d[1].x,  ptr(s->x)) )));
-
-	// free(head);
-	// free(zero);
 	return;
 }
 
 void bench_load_vec(bool md, double freq) {
-	table t(md, "Vector load instructions");
+	table t(md, "Vector load");
 
 	memmgr m_h(mem_init( p ));
 	memmgr m_u(mem_init( p ), 1);
@@ -161,7 +157,7 @@ void bench_load_vec(bool md, double freq) {
 	memmgr m_n(mem_init( &p[i - 2] ), 1);
 	memmgr m_z(mem_init( (void *)0 ));
 
-	bench h(freq, m_h.ptr(), m_h.ptr());
+	bench h(freq, m_h.ptr(), m_h.ptr(), 0, 0);
 	bench u(freq, m_u.ptr(), m_u.ptr());
 	bench m(freq, m_m.ptr() + 2);
 	bench n(freq, m_n.ptr() + 2);
@@ -173,97 +169,113 @@ void bench_load_vec(bool md, double freq) {
 	lat_i(freq, op( g->add(d->x, d->x, s->x) ));
 	lat_i(freq, op( g->add(d->x, d->x, s->x) ));
 	lat_i(freq, op( g->add(d->x, d->x, s->x) ));
-	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
-	double const add_latency = lat_i(freq, op( g->add(d->x, d->x, s->x) ));
-	double const mov_add_latency = mov_latency + add_latency;
+	// double const add_latency     = lat_i(freq, op( g->add(d->x, d->x, s->x) ));
+	double const mov_latency     = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
+	double const mov_add_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, 0) )) - mov_latency;
 
-	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),   op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldr.q (imm; ofs = 16)",                  both(h, op( g->ldr(d->q, ptr(s->x,      16)) ),  op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldr.q (imm; pre, ofs = 0)",              both(h, op( g->ldr(d->q, pre_ptr(s->x,  0)) ),   op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldr.q (imm; pre, ofs = 16)",             lat(m,  op( g->ldr(d->q, pre_ptr(s->x,  16));        g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern));
-	t.put("ldr.q (imm; post, ofs = 0)",             both(h, op( g->ldr(d->q, post_ptr(s->x, 0)) ),   op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldr.q (imm; post, ofs = 16)",            lat(h,  op( g->ldr(d->q, post_ptr(s->x, 16));        g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern));
+	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; ofs = 16)",                  both(h, op( g->ldr(d->q, ptr(s->x,      16)) ),          op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; pre, ofs = 0)",              both(h, op( g->ldr(d->q, pre_ptr(s->x,  0)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; pre, ofs = 16)",             lat(m,  op( g->ldr(d->q, pre_ptr(s->x,  16));                g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern));
+	t.put("ldr.q (imm; post, ofs = 0)",             both(h, op( g->ldr(d->q, post_ptr(s->x, 0)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; post, ofs = 16)",            lat(h,  op( g->ldr(d->q, post_ptr(s->x, 16));                g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern));
 
-	t.put("ldr.q (imm; ofs = 0; unaligned)",        both(u, op( g->ldr(d->q, ptr(s->x,      0)) ),   op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldr.q (imm; ofs = 16; unaligned)",       both(u, op( g->ldr(d->q, ptr(s->x,      16)) ),  op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldr.q (imm; pre, ofs = 0; unaligned)",   both(u, op( g->ldr(d->q, pre_ptr(s->x,  0)) ),   op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldr.q (imm; pre, ofs = 16; unaligned)",  lat(n,  op( g->ldr(d->q, pre_ptr(s->x,  16));        g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern));
-	t.put("ldr.q (imm; post, ofs = 0; unaligned)",  both(u, op( g->ldr(d->q, post_ptr(s->x, 0)) ),   op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldr.q (imm; post, ofs = 16; unaligned)", lat(h,  op( g->ldr(d->q, post_ptr(s->x, 16));        g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern));
+	t.put("ldr.q (imm; ofs = 0; unaligned)",        both(u, op( g->ldr(d->q, ptr(s->x,      0)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; ofs = 16; unaligned)",       both(u, op( g->ldr(d->q, ptr(s->x,      16)) ),          op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; pre, ofs = 0; unaligned)",   both(u, op( g->ldr(d->q, pre_ptr(s->x,  0)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; pre, ofs = 16; unaligned)",  lat(n,  op( g->ldr(d->q, pre_ptr(s->x,  16));                g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern));
+	t.put("ldr.q (imm; post, ofs = 0; unaligned)",  both(u, op( g->ldr(d->q, post_ptr(s->x, 0)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; post, ofs = 16; unaligned)", lat(h,  op( g->ldr(d->q, post_ptr(s->x, 16));                g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern));
 
-	t.put("ldur.q (imm; ofs = 0)",                  both(h, op( g->ldur(d->q, ptr(s->x,      0)) ),  op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldur.q (imm; ofs = 16)",                 both(h, op( g->ldur(d->q, ptr(s->x,      16)) ), op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldur.q (imm; ofs = 0; unaligned)",       both(u, op( g->ldur(d->q, ptr(s->x,      0)) ),  op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
-	t.put("ldur.q (imm; ofs = 16; unaligned)",      both(u, op( g->ldur(d->q, ptr(s->x,      16)) ), op( g->mov(d->x, d->v.d[0]) ), mov_latency, lat_inc1_pattern, thr_patterns));
+	t.put("ldur.q (imm; ofs = 0)",                  both(h, op( g->ldur(d->q, ptr(s->x,      0)) ),          op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldur.q (imm; ofs = 16)",                 both(h, op( g->ldur(d->q, ptr(s->x,      16)) ),         op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldur.q (imm; ofs = 0; unaligned)",       both(u, op( g->ldur(d->q, ptr(s->x,      0)) ),          op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldur.q (imm; ofs = 16; unaligned)",      both(u, op( g->ldur(d->q, ptr(s->x,      16)) ),         op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
 
-	t.put("ldp.q (ofs = 0; 1st elem)",              both(h, op( g->ldp(d[1].q, d[0].q, ptr(s->x)) ),         op( g->mov(d[1].x, d[1].v.d[0]) ), mov_latency, lat_inc2_pattern, thr_skip2_patterns));
-	t.put("ldp.q (ofs = 0; 2nd elem)",              both(h, op( g->ldp(d[0].q, d[1].q, ptr(s->x)) ),         op( g->mov(d[1].x, d[1].v.d[0]) ), mov_latency, lat_inc2_pattern, thr_skip2_patterns));
-	t.put("ldp.q (pre, ofs = 0)",                   both(h, op( g->ldp(d[0].q, d[1].q, pre_ptr(s->x, 0)) ),  op( g->mov(d[1].x, d[1].v.d[0]) ), mov_latency, lat_inc2_pattern, thr_skip2_patterns));
-	t.put("ldp.q (post, ofs = 0)",                  both(h, op( g->ldp(d[0].q, d[1].q, post_ptr(s->x, 0)) ), op( g->mov(d[1].x, d[1].v.d[0]) ), mov_latency, lat_inc2_pattern, thr_skip2_patterns));
-	t.put("ldp.q (ofs = 0; unaligned)",             both(u, op( g->ldp(d[0].q, d[1].q, ptr(s->x)) ),         op( g->mov(d[1].x, d[1].v.d[0]) ), mov_latency, lat_inc2_pattern, thr_skip2_patterns));
-	t.put("ldp.q (pre, ofs = 0; unaligned)",        both(u, op( g->ldp(d[0].q, d[1].q, pre_ptr(s->x, 0)) ),  op( g->mov(d[1].x, d[1].v.d[0]) ), mov_latency, lat_inc2_pattern, thr_skip2_patterns));
-	t.put("ldp.q (post, ofs = 0; unaligned)",       both(u, op( g->ldp(d[0].q, d[1].q, post_ptr(s->x, 0)) ), op( g->mov(d[1].x, d[1].v.d[0]) ), mov_latency, lat_inc2_pattern, thr_skip2_patterns));
+	t.put("ldp.q (ofs = 0; 1st elem)",              both(h, op( g->ldp(d[1].q, d[0].q, ptr(s->x)) ),         op( g->mov(d[1].x, d[1].v.d[0]) ),                             mov_latency,     lat_inc2_pattern,      thr_skip2_patterns));
+	t.put("ldp.q (ofs = 0; 2nd elem)",              both(h, op( g->ldp(d[0].q, d[1].q, ptr(s->x)) ),         op( g->mov(d[1].x, d[1].v.d[0]) ),                             mov_latency,     lat_inc2_pattern,      thr_skip2_patterns));
+	t.put("ldp.q (pre, ofs = 0)",                   both(h, op( g->ldp(d[0].q, d[1].q, pre_ptr(s->x, 0)) ),  op( g->mov(d[1].x, d[1].v.d[0]) ),                             mov_latency,     lat_inc2_pattern,      thr_skip2_patterns));
+	t.put("ldp.q (post, ofs = 0)",                  both(h, op( g->ldp(d[0].q, d[1].q, post_ptr(s->x, 0)) ), op( g->mov(d[1].x, d[1].v.d[0]) ),                             mov_latency,     lat_inc2_pattern,      thr_skip2_patterns));
+	t.put("ldp.q (ofs = 0; unaligned)",             both(u, op( g->ldp(d[0].q, d[1].q, ptr(s->x)) ),         op( g->mov(d[1].x, d[1].v.d[0]) ),                             mov_latency,     lat_inc2_pattern,      thr_skip2_patterns));
+	t.put("ldp.q (pre, ofs = 0; unaligned)",        both(u, op( g->ldp(d[0].q, d[1].q, pre_ptr(s->x, 0)) ),  op( g->mov(d[1].x, d[1].v.d[0]) ),                             mov_latency,     lat_inc2_pattern,      thr_skip2_patterns));
+	t.put("ldp.q (post, ofs = 0; unaligned)",       both(u, op( g->ldp(d[0].q, d[1].q, post_ptr(s->x, 0)) ), op( g->mov(d[1].x, d[1].v.d[0]) ),                             mov_latency,     lat_inc2_pattern,      thr_skip2_patterns));
 	t.put("ldnp.q",                                 thr(h,  op( g->ldnp(d[0].q, d[1].q, ptr(s->x)) )));
 
-	t.put("ld1.b (multi)",                          both(z, op( g->ld1(d->v.b, ptr(s->x)) ),         op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.b (multi)",                          both(z, op( g->ld2(d->v.b, ptr(s->x)) ),         op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.b (multi)",                          both(z, op( g->ld3(d->v.b, ptr(s->x)) ),         op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.b (multi)",                          both(z, op( g->ld4(d->v.b, ptr(s->x)) ),         op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.b (multi; 1 reg)",                   both(z, op( g->ld1(d[0].v.b - d[0].v.b, ptr(s->x)) ),    op( g->umov(s->w, d[0].v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1x_patterns));
+	t.put("ld1.b (multi; 2 reg)",                   both(z, op( g->ld1(d[0].v.b - d[1].v.b, ptr(s->x)) ),    op( g->umov(s->w, d[1].v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2x_patterns));
+	t.put("ld1.b (multi; 3 reg)",                   both(z, op( g->ld1(d[0].v.b - d[2].v.b, ptr(s->x)) ),    op( g->umov(s->w, d[2].v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3x_patterns));
+	t.put("ld1.b (multi; 4 reg)",                   both(z, op( g->ld1(d[0].v.b - d[3].v.b, ptr(s->x)) ),    op( g->umov(s->w, d[3].v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4x_patterns));
 
-	t.put("ld1.h (multi)",                          both(z, op( g->ld1(d->v.h, ptr(s->x)) ),         op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.h (multi)",                          both(z, op( g->ld2(d->v.h, ptr(s->x)) ),         op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.h (multi)",                          both(z, op( g->ld3(d->v.h, ptr(s->x)) ),         op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.h (multi)",                          both(z, op( g->ld4(d->v.h, ptr(s->x)) ),         op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.h (multi; 1 reg)",                   both(z, op( g->ld1(d[0].v.h - d[0].v.h, ptr(s->x)) ),    op( g->umov(s->w, d[0].v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1x_patterns));
+	t.put("ld1.h (multi; 2 reg)",                   both(z, op( g->ld1(d[0].v.h - d[1].v.h, ptr(s->x)) ),    op( g->umov(s->w, d[1].v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2x_patterns));
+	t.put("ld1.h (multi; 3 reg)",                   both(z, op( g->ld1(d[0].v.h - d[2].v.h, ptr(s->x)) ),    op( g->umov(s->w, d[2].v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3x_patterns));
+	t.put("ld1.h (multi; 4 reg)",                   both(z, op( g->ld1(d[0].v.h - d[3].v.h, ptr(s->x)) ),    op( g->umov(s->w, d[3].v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4x_patterns));
 
-	t.put("ld1.s (multi)",                          both(z, op( g->ld1(d->v.s, ptr(s->x)) ),         op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.s (multi)",                          both(z, op( g->ld2(d->v.s, ptr(s->x)) ),         op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.s (multi)",                          both(z, op( g->ld3(d->v.s, ptr(s->x)) ),         op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.s (multi)",                          both(z, op( g->ld4(d->v.s, ptr(s->x)) ),         op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.s (multi; 1 reg)",                   both(z, op( g->ld1(d[0].v.s - d[0].v.s, ptr(s->x)) ),    op( g->mov(s->w, d[0].v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1x_patterns));
+	t.put("ld1.s (multi; 2 reg)",                   both(z, op( g->ld1(d[0].v.s - d[1].v.s, ptr(s->x)) ),    op( g->mov(s->w, d[1].v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2x_patterns));
+	t.put("ld1.s (multi; 3 reg)",                   both(z, op( g->ld1(d[0].v.s - d[2].v.s, ptr(s->x)) ),    op( g->mov(s->w, d[2].v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3x_patterns));
+	t.put("ld1.s (multi; 4 reg)",                   both(z, op( g->ld1(d[0].v.s - d[3].v.s, ptr(s->x)) ),    op( g->mov(s->w, d[3].v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4x_patterns));
 
-	t.put("ld1.d (multi)",                          both(h, op( g->ld1(d->v.d, ptr(s->x)) ),         op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.d (multi)",                          both(h, op( g->ld2(d->v.d, ptr(s->x)) ),         op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.d (multi)",                          both(h, op( g->ld3(d->v.d, ptr(s->x)) ),         op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.d (multi)",                          both(h, op( g->ld4(d->v.d, ptr(s->x)) ),         op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.d (multi; 1 reg)",                   both(h, op( g->ld1(d[0].v.d - d[0].v.d, ptr(s->x)) ),    op( g->mov(s->x, d[0].v.d[1]) ),                               mov_latency,     &lat_flat_patterns[3], thr_skip1x_patterns));
+	t.put("ld1.d (multi; 2 reg)",                   both(h, op( g->ld1(d[0].v.d - d[1].v.d, ptr(s->x)) ),    op( g->mov(s->x, d[1].v.d[1]) ),                               mov_latency,     &lat_flat_patterns[2], thr_skip2x_patterns));
+	t.put("ld1.d (multi; 3 reg)",                   both(h, op( g->ld1(d[0].v.d - d[2].v.d, ptr(s->x)) ),    op( g->mov(s->x, d[2].v.d[1]) ),                               mov_latency,     &lat_flat_patterns[1], thr_skip3x_patterns));
+	t.put("ld1.d (multi; 4 reg)",                   both(h, op( g->ld1(d[0].v.d - d[3].v.d, ptr(s->x)) ),    op( g->mov(s->x, d[3].v.d[1]) ),                               mov_latency,     &lat_flat_patterns[0], thr_skip4x_patterns));
 
-	t.put("ld1.b (single; [15])",                   both(z, op( g->ld1(s[3].v.b[15], ptr(s->x)) ),   op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.b (single; [15])",                   both(z, op( g->ld2(s[2].v.b[15], ptr(s->x)) ),   op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.b (single; [15])",                   both(z, op( g->ld3(s[1].v.b[15], ptr(s->x)) ),   op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.b (single; [15])",                   both(z, op( g->ld4(s[0].v.b[15], ptr(s->x)) ),   op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld2.b (multi)",                          both(z, op( g->ld2(d->v.b, ptr(s->x)) ),                 op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.b (multi)",                          both(z, op( g->ld3(d->v.b, ptr(s->x)) ),                 op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.b (multi)",                          both(z, op( g->ld4(d->v.b, ptr(s->x)) ),                 op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1.h (single; [7])",                    both(z, op( g->ld1(s[3].v.h[7], ptr(s->x)) ),    op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.h (single; [7])",                    both(z, op( g->ld2(s[2].v.h[7], ptr(s->x)) ),    op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.h (single; [7])",                    both(z, op( g->ld3(s[1].v.h[7], ptr(s->x)) ),    op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.h (single; [7])",                    both(z, op( g->ld4(s[0].v.h[7], ptr(s->x)) ),    op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld2.h (multi)",                          both(z, op( g->ld2(d->v.h, ptr(s->x)) ),                 op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.h (multi)",                          both(z, op( g->ld3(d->v.h, ptr(s->x)) ),                 op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.h (multi)",                          both(z, op( g->ld4(d->v.h, ptr(s->x)) ),                 op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1.s (single; [3])",                    both(z, op( g->ld1(s[3].v.s[3], ptr(s->x)) ),    op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.s (single; [3])",                    both(z, op( g->ld2(s[2].v.s[3], ptr(s->x)) ),    op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.s (single; [3])",                    both(z, op( g->ld3(s[1].v.s[3], ptr(s->x)) ),    op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.s (single; [3])",                    both(z, op( g->ld4(s[0].v.s[3], ptr(s->x)) ),    op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld2.s (multi)",                          both(z, op( g->ld2(d->v.s, ptr(s->x)) ),                 op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.s (multi)",                          both(z, op( g->ld3(d->v.s, ptr(s->x)) ),                 op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.s (multi)",                          both(z, op( g->ld4(d->v.s, ptr(s->x)) ),                 op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1.d (single; [1])",                    both(h, op( g->ld1(s[3].v.d[1], ptr(s->x)) ),    op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.d (single; [1])",                    both(h, op( g->ld2(s[2].v.d[1], ptr(s->x)) ),    op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.d (single; [1])",                    both(h, op( g->ld3(s[1].v.d[1], ptr(s->x)) ),    op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.d (single; [1])",                    both(h, op( g->ld4(s[0].v.d[1], ptr(s->x)) ),    op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld2.d (multi)",                          both(h, op( g->ld2(d->v.d, ptr(s->x)) ),                 op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.d (multi)",                          both(h, op( g->ld3(d->v.d, ptr(s->x)) ),                 op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.d (multi)",                          both(h, op( g->ld4(d->v.d, ptr(s->x)) ),                 op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1r.b",                                 both(z, op( g->ld1r(d->v.b, ptr(s->x)) ),        op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2r.b",                                 both(z, op( g->ld2r(d->v.b, ptr(s->x)) ),        op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3r.b",                                 both(z, op( g->ld3r(d->v.b, ptr(s->x)) ),        op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4r.b",                                 both(z, op( g->ld4r(d->v.b, ptr(s->x)) ),        op( g->umov(s->w, d->v.b[15]); g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.b (single; [15])",                   both(z, op( g->ld1(s[3].v.b[15], ptr(s->x)) ),           op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2.b (single; [15])",                   both(z, op( g->ld2(s[2].v.b[15], ptr(s->x)) ),           op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.b (single; [15])",                   both(z, op( g->ld3(s[1].v.b[15], ptr(s->x)) ),           op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.b (single; [15])",                   both(z, op( g->ld4(s[0].v.b[15], ptr(s->x)) ),           op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1r.h",                                 both(z, op( g->ld1r(d->v.h, ptr(s->x)) ),        op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2r.h",                                 both(z, op( g->ld2r(d->v.h, ptr(s->x)) ),        op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3r.h",                                 both(z, op( g->ld3r(d->v.h, ptr(s->x)) ),        op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4r.h",                                 both(z, op( g->ld4r(d->v.h, ptr(s->x)) ),        op( g->umov(s->w, d->v.h[7]);  g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.h (single; [7])",                    both(z, op( g->ld1(s[3].v.h[7], ptr(s->x)) ),            op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2.h (single; [7])",                    both(z, op( g->ld2(s[2].v.h[7], ptr(s->x)) ),            op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.h (single; [7])",                    both(z, op( g->ld3(s[1].v.h[7], ptr(s->x)) ),            op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.h (single; [7])",                    both(z, op( g->ld4(s[0].v.h[7], ptr(s->x)) ),            op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1r.s",                                 both(z, op( g->ld1r(d->v.s, ptr(s->x)) ),        op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2r.s",                                 both(z, op( g->ld2r(d->v.s, ptr(s->x)) ),        op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3r.s",                                 both(z, op( g->ld3r(d->v.s, ptr(s->x)) ),        op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4r.s",                                 both(z, op( g->ld4r(d->v.s, ptr(s->x)) ),        op( g->mov(s->w, d->v.s[3]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.s (single; [3])",                    both(z, op( g->ld1(s[3].v.s[3], ptr(s->x)) ),            op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2.s (single; [3])",                    both(z, op( g->ld2(s[2].v.s[3], ptr(s->x)) ),            op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.s (single; [3])",                    both(z, op( g->ld3(s[1].v.s[3], ptr(s->x)) ),            op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.s (single; [3])",                    both(z, op( g->ld4(s[0].v.s[3], ptr(s->x)) ),            op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1r.d",                                 both(h, op( g->ld1r(d->v.d, ptr(s->x)) ),        op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2r.d",                                 both(h, op( g->ld2r(d->v.d, ptr(s->x)) ),        op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3r.d",                                 both(h, op( g->ld3r(d->v.d, ptr(s->x)) ),        op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4r.d",                                 both(h, op( g->ld4r(d->v.d, ptr(s->x)) ),        op( g->mov(s->x, d->v.d[1]) ),                               mov_latency,     &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.d (single; [1])",                    both(h, op( g->ld1(s[3].v.d[1], ptr(s->x)) ),            op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2.d (single; [1])",                    both(h, op( g->ld2(s[2].v.d[1], ptr(s->x)) ),            op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.d (single; [1])",                    both(h, op( g->ld3(s[1].v.d[1], ptr(s->x)) ),            op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.d (single; [1])",                    both(h, op( g->ld4(s[0].v.d[1], ptr(s->x)) ),            op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[0], thr_skip4_patterns));
+
+	t.put("ld1r.b",                                 both(z, op( g->ld1r(d->v.b, ptr(s->x)) ),                op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2r.b",                                 both(z, op( g->ld2r(d->v.b, ptr(s->x)) ),                op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3r.b",                                 both(z, op( g->ld3r(d->v.b, ptr(s->x)) ),                op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4r.b",                                 both(z, op( g->ld4r(d->v.b, ptr(s->x)) ),                op( g->umov(s->w, d->v.b[15]);   g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+
+	t.put("ld1r.h",                                 both(z, op( g->ld1r(d->v.h, ptr(s->x)) ),                op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2r.h",                                 both(z, op( g->ld2r(d->v.h, ptr(s->x)) ),                op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3r.h",                                 both(z, op( g->ld3r(d->v.h, ptr(s->x)) ),                op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4r.h",                                 both(z, op( g->ld4r(d->v.h, ptr(s->x)) ),                op( g->umov(s->w, d->v.h[7]);    g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+
+	t.put("ld1r.s",                                 both(z, op( g->ld1r(d->v.s, ptr(s->x)) ),                op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2r.s",                                 both(z, op( g->ld2r(d->v.s, ptr(s->x)) ),                op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3r.s",                                 both(z, op( g->ld3r(d->v.s, ptr(s->x)) ),                op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4r.s",                                 both(z, op( g->ld4r(d->v.s, ptr(s->x)) ),                op( g->mov(s->w, d->v.s[3]);     g->add(s->x, s->x, g->x28) ), mov_add_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+
+	t.put("ld1r.d",                                 both(h, op( g->ld1r(d->v.d, ptr(s->x)) ),                op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2r.d",                                 both(h, op( g->ld2r(d->v.d, ptr(s->x)) ),                op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3r.d",                                 both(h, op( g->ld3r(d->v.d, ptr(s->x)) ),                op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4r.d",                                 both(h, op( g->ld4r(d->v.d, ptr(s->x)) ),                op( g->mov(s->x, d->v.d[1]) ),                                 mov_latency,     &lat_flat_patterns[0], thr_skip4_patterns));
 	return;
 }
 

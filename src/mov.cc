@@ -7,31 +7,38 @@
 #include <stdlib.h>
 
 void bench_mov(bool md, double freq) {
-	table t(md, "Register move");
+	table t(md, "Scalar nop and mov");
 	bench b(freq);
 
 	/* decoder / allocation throughput */
-	t.put("nop",                        thr(b, op( g->nop() )));
+	t.put("nop",                        thr(b,  op( g->nop() )));
 	t.put("mov (x -> x)",               both(b, op( g->mov(d->x, s->x) )));
 	t.put("mov (v.b -> v.b)",           both(b, op( g->mov(d->v.b, s->v.b) )));
+
+	/* immediate */
+	t.put("mov / movz (imm)",           thr(b,  op( g->mov(d->x, 0x1ffc) )));
+	t.put("mov / movz (imm<<16)",       thr(b,  op( g->mov(d->x, 0x1ffc<<16) )));
+	t.put("mov (mask imm)",             thr(b,  op( g->mov(d->x, 0x1ffffffffffc) )));
+	t.put("mov / movn (imm)",           thr(b,  op( g->movn(d->x, 0x1ffc) )));
+	t.put("mov / movn (imm<<16)",       thr(b,  op( g->movn(d->x, 0x1ffc, 16) )));
+	t.put("movk",                       thr(b,  op( g->movk(d->x, 0x1ffc) )));
+	t.put("movk (<<16)",                thr(b,  op( g->movk(d->x, 0x1ffc, 16) )));
+
+	t.put("mvni.h",                     thr(b,  op( g->mvni(d->v.h, 0x11, ShMod::LSL, 0) )));
+	t.put("mvni.s",                     thr(b,  op( g->mvni(d->v.s, 0x11, ShMod::LSL, 0) )));
+	t.put("mvni.h",                     thr(b,  op( g->mvni(d->v.h, 0x11, ShMod::LSL, 8) )));
+	t.put("mvni.s",                     thr(b,  op( g->mvni(d->v.s, 0x11, ShMod::LSL, 8) )));
+
+	/* idioms */
 	t.put("eor (reg; zeroing idiom)",   both(b, op( g->eor(d->x, s->x, s->x) )));
 	t.put("eor.b (reg; zeroing idiom)", both(b, op( g->eor(d->v.b, s->v.b, s->v.b) )));
 	t.put("sub (reg; zeroing idiom)",   both(b, op( g->sub(d->x, s->x, s->x) )));
 	t.put("sub.b (reg; zeroing idiom)", both(b, op( g->sub(d->v.b, s->v.b, s->v.b) )));
-
-	/* immediate */
-	t.put("mov / movz (imm)",           thr(b, op( g->mov(d->x, 0x1ffc) )));
-	t.put("mov / movz (imm<<16)",       thr(b, op( g->mov(d->x, 0x1ffc<<16) )));
-	t.put("mov (mask imm)",             thr(b, op( g->mov(d->x, 0x1ffffffffffc) )));
-	t.put("mov / movn (imm)",           thr(b, op( g->movn(d->x, 0x1ffc) )));
-	t.put("mov / movn (imm<<16)",       thr(b, op( g->movn(d->x, 0x1ffc, 16) )));
-	t.put("movk",                       thr(b, op( g->movk(d->x, 0x1ffc) )));
-	t.put("movk (<<16)",                thr(b, op( g->movk(d->x, 0x1ffc, 16) )));
 	return;
 }
 
 void bench_mov_vec(bool md, double freq) {
-	table t(md, "Vector element move");
+	table t(md, "Vector element mov");
 	bench b(freq);
 
 	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
@@ -124,7 +131,7 @@ void bench_mov_vec(bool md, double freq) {
 }
 
 void bench_perm_vec(bool md, double freq) {
-	table t(md, "Vector permutation");
+	table t(md, "Vector perm");
 	bench b(freq);
 
 	t.put("ext.b (>>1)",                both(b, op( g->ext(d->v.b, d->v.b, s->v.b, 1) )));

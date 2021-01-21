@@ -8,7 +8,7 @@
 
 static
 void bench_bitwise_logic(bool md, double freq, double adc_latency) {
-	table t(md, "Logical instructions");
+	table t(md, "Scalar bitwise logic");
 	bench b(freq);
 
 	/* basic bitwise logic */
@@ -46,7 +46,7 @@ void bench_bitwise_logic(bool md, double freq, double adc_latency) {
 
 static
 void bench_shift_bitmanip(bool md, double freq, double adc_latency) {
-	table t(md, "Shift and bit-manipulation instructions");
+	table t(md, "Scalar shift and bitmanip");
 	bench b(freq);
 
 	t.put("lsl (reg) / lslv",           both(b, op( g->lsl(d->x, d->x, s->x) )));

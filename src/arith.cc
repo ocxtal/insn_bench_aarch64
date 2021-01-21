@@ -8,7 +8,7 @@
 
 static
 void bench_basic_arith(bool md, double freq) {
-	table t(md, "Addition, subtraction, and negation");
+	table t(md, "Scalar integer add, sub, and neg");
 	bench b(freq);
 
 	double const adc_latency = lat_i(freq, op( g->adc(d->x, d->x, s->x) ));
@@ -63,7 +63,7 @@ void bench_basic_arith(bool md, double freq) {
 
 static
 void bench_mul(bool md, double freq) {
-	table t(md, "Multiplication and multiply-accumulate");
+	table t(md, "Scalar integer mul and mul-acc");
 	bench b(freq);
 
 	t.put("mul",                        both(b, op( g->mul(d->x, d->x, s->x) )));
@@ -87,7 +87,7 @@ void bench_mul(bool md, double freq) {
 
 static
 void bench_div(bool md, double freq) {
-	table t(md, "Division");
+	table t(md, "Scalar integer div");
 	bench b(freq);
 
 	/* FIXME: vary divisor value */
@@ -98,7 +98,7 @@ void bench_div(bool md, double freq) {
 
 static
 void bench_signext(bool md, double freq) {
-	table t(md, "Sign extension");
+	table t(md, "Scalar integer sign extend");
 	bench b(freq);
 
 	t.put("sxtb",                       both(b, op( g->sxtb(d->x, s->w) )));

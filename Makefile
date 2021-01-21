@@ -1,8 +1,8 @@
 
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -g -mcpu=native -Iinclude -Ixbyak_aarch64/xbyak_aarch64
+CXXFLAGS = -std=c++11 -Wall -Wextra -O3 -mcpu=native -Iinclude -Ixbyak_aarch64/xbyak_aarch64
 LDFLAGS = -Lxbyak_aarch64/lib -lxbyak_aarch64
-TARGET = bench
+TARGET = insn_bench_aarch64
 SRCS = $(shell bash -c "ls src/*.cc")
 OBJS = $(SRCS:cc=o)
 

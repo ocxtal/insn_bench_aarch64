@@ -8,12 +8,12 @@
 
 static
 void bench_bitwise_logic_vec(bool md, double freq) {
-	table t(md, "Vector bitwise logic instructions");
+	table t(md, "Vector bitwise logic");
 	bench b(freq);
 
 	t.put("and.b",                      both(b, op( g->and_(d->v.b, d->v.b, s->v.b) )));
 
-	t.put("orr.b",                      both(b, op( g->orr(d->v.b, d->v.b, s->v.b) )));
+	t.put("orr.b",                      both(b, op( g->orr(d->v.b, g->v28.b, s->v.b) )));	/* to prevent from being mov */
 	t.put("orr.h",                      both(b, op( g->orr(d->v.h, 0x11, ShMod::LSL, 0) )));
 	t.put("orr.s",                      both(b, op( g->orr(d->v.s, 0x11, ShMod::LSL, 0) )));
 	t.put("orr.h",                      both(b, op( g->orr(d->v.h, 0x11, ShMod::LSL, 8) )));
@@ -25,16 +25,12 @@ void bench_bitwise_logic_vec(bool md, double freq) {
 
 	t.put("not.b",                      both(b, op( g->not_(d->v.b, s->v.b) )));
 	t.put("mvn.b",                      both(b, op( g->mvn(d->v.b, s->v.b) )));
-	t.put("mvni.h",                     both(b, op( g->mvni(d->v.h, 0x11, ShMod::LSL, 0) )));
-	t.put("mvni.s",                     both(b, op( g->mvni(d->v.s, 0x11, ShMod::LSL, 0) )));
-	t.put("mvni.h",                     both(b, op( g->mvni(d->v.h, 0x11, ShMod::LSL, 8) )));
-	t.put("mvni.s",                     both(b, op( g->mvni(d->v.s, 0x11, ShMod::LSL, 8) )));
 	return;
 }
 
 static
 void bench_bitmanip_vec(bool md, double freq) {
-	table t(md, "Vector bit-manipulation instructions");
+	table t(md, "Vector bitmanip");
 	bench b(freq);
 
 	/* bitwise blend */
@@ -75,7 +71,7 @@ void bench_bitmanip_vec(bool md, double freq) {
 
 static
 void bench_shift_vec(bool md, double freq) {
-	table t(md, "Vector shift instructions");
+	table t(md, "Vector shift");
 	bench b(freq);
 
 	/* shift left */

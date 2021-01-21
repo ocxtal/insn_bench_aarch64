@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 void bench_cond(bool md, double freq) {
-	table t(md, "Conditional arithmetic and logic");
+	table t(md, "Scalar conditional arith");
 	bench b(freq);
 
 	t.put("csinc (eq)",                 both(b, op( g->csinc(d->x, d->x, s->x, Cond::EQ) )));
