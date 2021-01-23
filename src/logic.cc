@@ -91,8 +91,9 @@ void bench_shift_bitmanip(bool md, double freq, double adc_latency) {
 void bench_logic(bool md, double freq) {
 	double const adc_latency = lat_i(freq, op( g->adc(d->x, d->x, s->x) ));
 
-	bench_bitwise_logic(md, freq, adc_latency);
 	bench_shift_bitmanip(md, freq, adc_latency);
+
+	bench_bitwise_logic(md, freq, adc_latency);
 	return;
 }
 

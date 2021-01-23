@@ -13,7 +13,8 @@ void bench_branch(bool md, double freq) {
 	// double const add8_latency = lat_i(freq, op( g->add() ));
 
 	/* unconditional branch */ {
-		bench b(freq, (size_t)0, (size_t)1, 1, 1, 1, 5);
+		bench b(freq, (size_t)0, (size_t)1);
+
 		t.put("b (pc+4)", both(b, op(
 			Label l;
 			g->b(l); g->L(l);
@@ -50,7 +51,7 @@ void bench_branch(bool md, double freq) {
 
 
 		#define bl_ret(_body) both(b, \
-			op( g->bl(*gl); g->bl(*gl) ), op(), \
+			op( g->bl(*gl) ), op(), \
 			op_init( \
 				Label l; \
 				               g->b(l); \
@@ -61,7 +62,7 @@ void bench_branch(bool md, double freq) {
 			0.0, lat_patterns, lat_patterns \
 		)
 		#define blr_ret(_body) both(b, \
-			op( g->blr(g->x0); g->blr(g->x0) ), op(), \
+			op( g->blr(g->x0) ), op(), \
 			op_init( \
 				Label l; \
 				               g->adr(g->x0, 128); g->b(l); \
@@ -86,7 +87,7 @@ void bench_branch(bool md, double freq) {
 	}
 
 	/* conditional branch */ {
-		bench b(freq, (size_t)0, (size_t)0xffffffffffffffff, 1, 1, 1, 5);
+		bench b(freq, (size_t)0, (size_t)0xffffffffffffffff);
 		t.put("cbz (pc+4; taken)", both(b, op(
 			Label l;
 			g->cbz(g->x27, l); g->L(l);
@@ -154,7 +155,7 @@ void bench_branch(bool md, double freq) {
 
 	/* conditional branch (unpredictable) */ {
 		memmgr m_r(mem_init( g->rnd() ), 0, 128, 42);
-		bench c(freq, NULL, m_r.ptr(), 1, 1, 1, 5, 64);
+		bench c(freq, NULL, m_r.ptr(), 1, 1, 1, 1, 64);
 
 		#define y(_br, _body) { \
 			Label l[16]; \

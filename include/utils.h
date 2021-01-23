@@ -555,7 +555,7 @@ private:
 
 	/* pattern: (count, pitch, offset, mod) */
 	size_t count_insns(pattern_t const *p) {
-		if(p == NULL || p->count == 0) { return(1); }
+		if(p == NULL || p->count == 0) { return(n_insns_body); }
 		return(p->count * count_insns(p + 1));
 	}
 	size_t expand(op_t fp, Label *l, pattern_t const *p, size_t base) {

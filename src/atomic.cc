@@ -12,6 +12,11 @@ void bench_atomic(bool md, double freq) {
 	memmgr m_z(mem_init( (void *)0 ));
 	bench b(freq, NULL, m_z.ptr());
 
+	t.put("casal",                                      both(b, op( g->casal(d->x,     s->x, ptr(g->x28)) )));
+	t.put("caspal",                                     both(b, op( g->caspal(s[0].x,  s[2].x, ptr(g->x28)) ), 0.0, lat_flat0_pattern, thr_skip4x_patterns));
+	t.put("casalb",                                     both(b, op( g->casalb(d->w,    s->w, ptr(g->x28)) )));
+	t.put("casalh",                                     both(b, op( g->casalh(d->w,    s->w, ptr(g->x28)) )));
+
 	t.put("ldaddal",                                    both(b, op( g->ldaddal(d->x,   s->x, ptr(g->x28)) )));
 	t.put("ldaddalb",                                   both(b, op( g->ldaddalb(d->w,  s->w, ptr(g->x28)) )));
 	t.put("ldaddalh",                                   both(b, op( g->ldaddalh(d->w,  s->w, ptr(g->x28)) )));

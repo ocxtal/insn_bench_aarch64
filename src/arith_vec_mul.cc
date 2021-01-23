@@ -216,7 +216,7 @@ void bench_mla_vec(bool md, double freq) {
 	t.put("sdot.b (elem; v.b[0])",      both(b, op( g->sdot(d->v.s, d->v.b, s->v.b4[0]) )));
 	t.put("sdot.b (elem; v.b[3])",      both(b, op( g->sdot(d->v.s, d->v.b, s->v.b4[3]) )));
 
-	/* TODO */
+	/* TODO; waiting for xbyak_aarch64 */
 	// t.put("sudot.b (vec)",              both(b, op( g->sudot(d->v.s, d->v.b, s->v.b) )));
 	// t.put("sudot.b (elem; v.b[0])",     both(b, op( g->sudot(d->v.s, d->v.b, s->v.b4[0]) )));
 	// t.put("sudot.b (elem; v.b[3])",     both(b, op( g->sudot(d->v.s, d->v.b, s->v.b4[3]) )));
@@ -229,6 +229,47 @@ void bench_mla_vec(bool md, double freq) {
 	return;
 }
 
+
+static
+void bench_aba_vec(bool md, double freq) {
+	table t(md, "Vector integer abs-diff acc");
+	bench b(freq);
+
+	t.put("saba.b (acc. fwd.)",         lat(b,  op( g->saba(g->v28.b, s->v.b, s->v.b) )));
+	t.put("saba.b",                     both(b, op( g->saba(d->v.b, d->v.b, s->v.b) )));
+	t.put("saba.h",                     both(b, op( g->saba(d->v.h, d->v.h, s->v.h) )));
+	t.put("saba.s",                     both(b, op( g->saba(d->v.s, d->v.s, s->v.s) )));
+
+
+	t.put("uaba.b",                     both(b, op( g->uaba(d->v.b, d->v.b, s->v.b) )));
+	t.put("uaba.h",                     both(b, op( g->uaba(d->v.h, d->v.h, s->v.h) )));
+	t.put("uaba.s",                     both(b, op( g->uaba(d->v.s, d->v.s, s->v.s) )));
+
+	t.put("sabal.b",                    both(b, op( g->sabal(d->v.h, d->v.b8, s->v.b8) )));
+	t.put("sabal.h",                    both(b, op( g->sabal(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("sabal.s",                    both(b, op( g->sabal(d->v.d, d->v.s2, s->v.s2) )));
+	t.put("sabal2.b",                   both(b, op( g->sabal2(d->v.h, d->v.b, s->v.b) )));
+	t.put("sabal2.h",                   both(b, op( g->sabal2(d->v.s, d->v.h, s->v.h) )));
+	t.put("sabal2.s",                   both(b, op( g->sabal2(d->v.d, d->v.s, s->v.s) )));
+
+	t.put("uabal.b",                    both(b, op( g->uabal(d->v.h, d->v.b8, s->v.b8) )));
+	t.put("uabal.h",                    both(b, op( g->uabal(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("uabal.s",                    both(b, op( g->uabal(d->v.d, d->v.s2, s->v.s2) )));
+	t.put("uabal2.b",                   both(b, op( g->uabal2(d->v.h, d->v.b, s->v.b) )));
+	t.put("uabal2.h",                   both(b, op( g->uabal2(d->v.s, d->v.h, s->v.h) )));
+	t.put("uabal2.s",                   both(b, op( g->uabal2(d->v.d, d->v.s, s->v.s) )));
+
+	t.put("sadalp.b",                   both(b, op( g->sadalp(d->v.h, s->v.b) )));
+	t.put("sadalp.h",                   both(b, op( g->sadalp(d->v.s, s->v.h) )));
+	t.put("sadalp.s",                   both(b, op( g->sadalp(d->v.d, s->v.s) )));
+
+	t.put("uadalp.b",                   both(b, op( g->uadalp(d->v.h, s->v.b) )));
+	t.put("uadalp.h",                   both(b, op( g->uadalp(d->v.s, s->v.h) )));
+	t.put("uadalp.s",                   both(b, op( g->uadalp(d->v.d, s->v.s) )));
+	return;
+}
+
+
 static
 void bench_recip_vec(bool md, double freq) {
 	table t(md, "Vector integer div");
@@ -240,8 +281,12 @@ void bench_recip_vec(bool md, double freq) {
 }
 
 void bench_ext_arith_vec(bool md, double freq) {
+	bench_aba_vec(md, freq);
+
+
 	bench_mul_vec(md, freq);
 	bench_mla_vec(md, freq);
+	bench_aba_vec(md, freq);
 	bench_recip_vec(md, freq);
 	return;
 }
