@@ -31,9 +31,9 @@ void bench_mov(bool md, double freq) {
 
 	/* idioms */
 	t.put("eor (reg; zeroing idiom)",   both(b, op( g->eor(d->x, s->x, s->x) )));
-	t.put("eor.b (reg; zeroing idiom)", both(b, op( g->eor(d->v.b, s->v.b, s->v.b) )));
+	t.put("eor.b (zeroing idiom)",      both(b, op( g->eor(d->v.b, s->v.b, s->v.b) )));
 	t.put("sub (reg; zeroing idiom)",   both(b, op( g->sub(d->x, s->x, s->x) )));
-	t.put("sub.b (reg; zeroing idiom)", both(b, op( g->sub(d->v.b, s->v.b, s->v.b) )));
+	t.put("sub.b (zeroing idiom)",      both(b, op( g->sub(d->v.b, s->v.b, s->v.b) )));
 	return;
 }
 

@@ -18,12 +18,12 @@ void bench_cmp(bool md, double freq) {
 		thr(b, op( g->adds(s->x, s->x, g->x28); for(size_t j = 0; j < (_i); j++) { _body; } )).thr * (double)(_i); \
 	})
 	#define sweep(_body) ({ \
-		double const l = lat(b, op( g->adcs(s->x, s->x, g->x28); _body; ), adcs_latency).lat; \
-		double const t = std::max({ \
+		measure_t const _l = lat(b, op( g->adcs(s->x, s->x, g->x28); _body; ), adcs_latency); \
+		double const _t = std::max({ \
 			thr_body(1, _body), thr_body(2, _body), thr_body(3, _body), thr_body(4, _body), \
 			thr_body(5, _body), thr_body(6, _body), thr_body(7, _body), thr_body(8, _body) \
 		}); \
-		(measure_t){ .lat = l, .thr = t }; \
+		(measure_t){ .lat = _l.lat, .thr = _t }; \
 	})
 
 	t.put("ccmn (reg; eq)",             sweep( g->ccmn(s->x, g->x28, 0xf, Cond::EQ) ));
@@ -147,12 +147,12 @@ void bench_cmp_fp_vec(bool md, double freq) {
 		thr(b, op( g->adds(s->x, s->x, g->x28); for(size_t j = 0; j < (_i); j++) { _body; } )).thr * (double)(_i); \
 	})
 	#define sweep(_body) ({ \
-		double const l = lat(b, op( _body; g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency).lat; \
-		double const t = std::max({ \
+		double const _l = lat(b, op( _body; g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency).lat; \
+		double const _t = std::max({ \
 			thr_body(1, _body), thr_body(2, _body), thr_body(3, _body), thr_body(4, _body), \
 			thr_body(5, _body), thr_body(6, _body), thr_body(7, _body), thr_body(8, _body) \
 		}); \
-		(measure_t){ .lat = l, .thr = t }; \
+		(measure_t){ .lat = _l, .thr = _t }; \
 	})
 
 	t.put("fccmp.h (eq)",               sweep( g->fccmp(s->h, s->h, 0xf, Cond::EQ) ));

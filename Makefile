@@ -1,6 +1,6 @@
 
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -O3 -mcpu=native -Iinclude -Ixbyak_aarch64/xbyak_aarch64
+CXXFLAGS = -std=c++11 -Wall -Wextra -Wno-unused-variable -Og -mcpu=native -Iinclude -Ixbyak_aarch64/xbyak_aarch64
 LDFLAGS = -Lxbyak_aarch64/lib -lxbyak_aarch64
 TARGET = insn_bench_aarch64
 SRCS = $(shell bash -c "ls src/*.cc")
@@ -18,7 +18,7 @@ $(TARGET): $(OBJS) xbyak_aarch64/lib/libxbyak_aarch64.a
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
-	$(RM) -f $(TARGET) src/*.{o,d}
+	$(RM) -f $(TARGET) src/*.o src/*.d
 
 -include $(SRCS:cc=d)
 

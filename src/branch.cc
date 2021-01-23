@@ -10,53 +10,38 @@
 void bench_branch(bool md, double freq) {
 	table t(md, "Branch");
 
-	/* unconditional branch */ {
-		bench b(freq, (size_t)0, (size_t)1, 1, 1, 1, 2);
+	// double const add8_latency = lat_i(freq, op( g->add() ));
 
+	/* unconditional branch */ {
+		bench b(freq, (size_t)0, (size_t)1, 1, 1, 1, 5);
 		t.put("b (pc+4)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->b(l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->b(l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("b (pc+8)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->b(l[i]); g->nop(); g->L(l[i]);
-			}
+			Label l;
+			g->b(l); g->nop(); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("b (pc+4) // add (chain)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->add(g->x0, g->x0, g->x1);
-				g->b(l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->add(g->x0, g->x0, g->x1);
+			g->b(l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("b (pc+4) // add x 2 (chain)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->add(g->x0, g->x0, g->x1);
-				g->add(g->x0, g->x0, g->x1);
-				g->b(l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->add(g->x0, g->x0, g->x1);
+			g->add(g->x0, g->x0, g->x1);
+			g->b(l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("adr -> br (pc+4)", both(b, op(
-			g->adr(g->x0, 8); g->br(g->x0);
 			g->adr(g->x0, 8); g->br(g->x0);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("adr -> br (pc+4) // add (chain)", both(b, op(
 			g->adr(g->x0, 12);
 			g->add(g->x1, g->x1, g->x2);
 			g->br(g->x0);
-			g->adr(g->x0, 12);
-			g->add(g->x1, g->x1, g->x2);
-			g->br(g->x0);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("adr -> br (pc+4) // add x 2 (chain)", both(b, op(
-			g->add(g->x1, g->x1, g->x2);
-			g->adr(g->x0, 12);
-			g->add(g->x1, g->x1, g->x2);
-			g->br(g->x0);
 			g->add(g->x1, g->x1, g->x2);
 			g->adr(g->x0, 12);
 			g->add(g->x1, g->x1, g->x2);
@@ -101,103 +86,75 @@ void bench_branch(bool md, double freq) {
 	}
 
 	/* conditional branch */ {
-		bench b(freq, (size_t)0, (size_t)0xffffffffffffffff, 1, 1, 1, 2);
+		bench b(freq, (size_t)0, (size_t)0xffffffffffffffff, 1, 1, 1, 5);
 		t.put("cbz (pc+4; taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->cbz(g->x27, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->cbz(g->x27, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("cbz (pc+4; taken) // add (chain)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->cbz(g->x27, l[i]); g->L(l[i]); g->add(g->x0, g->x0, g->x1);
-			}
+			Label l;
+			g->cbz(g->x27, l); g->L(l); g->add(g->x0, g->x0, g->x1);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("cbz (pc+4; taken) // add x 2 (chain)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->cbz(g->x27, l[i]); g->L(l[i]); g->add(g->x0, g->x0, g->x1); g->add(g->x0, g->x0, g->x1);
-			}
+			Label l;
+			g->cbz(g->x27, l); g->L(l); g->add(g->x0, g->x0, g->x1); g->add(g->x0, g->x0, g->x1);
 		), 0.0, lat_patterns, lat_patterns));
 
 		t.put("cbz (pc+4; not taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->cbz(g->x28, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->cbz(g->x28, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("cbz (pc+4; not taken) // add (chain)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->cbz(g->x28, l[i]); g->L(l[i]); g->add(g->x0, g->x0, g->x1);
-			}
+			Label l;
+			g->cbz(g->x28, l); g->L(l); g->add(g->x0, g->x0, g->x1);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("cbz (pc+4; not taken) // add x 2 (chain)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->cbz(g->x28, l[i]); g->L(l[i]); g->add(g->x0, g->x0, g->x1); g->add(g->x0, g->x0, g->x1);
-			}
+			Label l;
+			g->cbz(g->x28, l); g->L(l); g->add(g->x0, g->x0, g->x1); g->add(g->x0, g->x0, g->x1);
 		), 0.0, lat_patterns, lat_patterns));
 
 		t.put("cbnz (pc+4; taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->cbnz(g->x28, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->cbnz(g->x28, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("cbnz (pc+4; not taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->cbnz(g->x27, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->cbnz(g->x27, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 
 		t.put("tbz (pc+4; taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->tbz(g->x27, 0x01, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->tbz(g->x27, 0x01, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("tbz (pc+4; not taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->tbz(g->x28, 0x01, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->tbz(g->x28, 0x01, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 
 		t.put("tbnz (pc+4; taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->tbnz(g->x28, 0x01, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->tbnz(g->x28, 0x01, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("tbnz (pc+4; not taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->tbnz(g->x27, 0x01, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->tbnz(g->x27, 0x01, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 
 		t.put("adds -> b.eq (pc+4; taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->adds(g->x0, g->x0, g->x1);
-				g->b(Cond::EQ, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->adds(g->x0, g->x0, g->x1);
+			g->b(Cond::EQ, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 		t.put("adds -> b.eq (pc+4; not taken)", both(b, op(
-			Label l[2];
-			for(size_t i = 0; i < 2; i++) {
-				g->adds(g->x28, g->x28, g->x1);
-				g->b(Cond::EQ, l[i]); g->L(l[i]);
-			}
+			Label l;
+			g->adds(g->x28, g->x28, g->x1);
+			g->b(Cond::EQ, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
 	}
 
 	/* conditional branch (unpredictable) */ {
 		memmgr m_r(mem_init( g->rnd() ), 0, 128, 42);
-		bench c(freq, NULL, m_r.ptr(), 1, 1, 1, 64);
+		bench c(freq, NULL, m_r.ptr(), 1, 1, 1, 5, 64);
 
 		#define y(_br, _body) { \
 			Label l[16]; \

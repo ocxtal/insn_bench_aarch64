@@ -456,7 +456,7 @@ public:
 // typedef void (*op_t)(CodeGenerator *g, AReg const *r);
 typedef std::function<size_t (CodeGenerator *, AReg const *, AReg const *, Label *)> op_t;
 #define op(_body)			( [ ](CodeGenerator *g, AReg const *d, AReg const *s, Label *gl) -> size_t { (void)g; (void)d; (void)s; (void)gl; _body; return(1); } )
-#define op_cap(_body)		( [=](CodeGenerator *g, AReg const *d, AReg const *s, Label *gl) -> size_t { (void)g; (void)d; (void)s; (void)gl; _body; return(1); } )
+#define op_cap(_body)		( [&](CodeGenerator *g, AReg const *d, AReg const *s, Label *gl) -> size_t { (void)g; (void)d; (void)s; (void)gl; _body; return(1); } )
 
 typedef std::function<void (CodeGenerator *, Label *)> op_init_t;
 #define op_init(_body)		( [](CodeGenerator *g, Label *gl) { (void)g; (void)gl; _body; } )
@@ -558,23 +558,24 @@ private:
 		if(p == NULL || p->count == 0) { return(1); }
 		return(p->count * count_insns(p + 1));
 	}
-	void expand(op_t fp, Label *l, pattern_t const *p, size_t base) {
+	size_t expand(op_t fp, Label *l, pattern_t const *p, size_t base) {
 		if(p == NULL || p->count == 0) {
 			// assert(base < 30);
 			size_t const offset = p[-1].offset;
 			size_t const mod = p[-1].mod;
 			fp(this, &regs[(base + offset) % mod], &regs[base % mod], l);
-			return;
+			return(0);
 		}
 		for(size_t i = 0; i < p->count; i++) {
 			expand(fp, l, p + 1, i * p->pitch + base);
 		}
-		return;
+		return(0);
 	}
-	void expand(op_t fp, op_init_t fp_clear, Label *l, pattern_t const *p) {
+	size_t expand(op_t fp, op_init_t fp_clear, Label *l, pattern_t const *p) {
 		/* loop counter; roundup fractions */
-		size_t const count = count_insns(p);
-		mov(x29, (n_insns_tot + count - 1) / count);
+		size_t const count  = count_insns(p);
+		size_t const n_iter = (n_insns_tot + count - 1) / count;
+		mov(x29, n_iter);
 
 		/* core loop */
 		align(128);
@@ -585,7 +586,7 @@ private:
 			subs(x29, x29, 1);
 			bne(loop);
 		}
-		return;
+		return(count * n_iter);
 	}
 	void init_reglist(pattern_t const *p) {
 		if(p == NULL) { return; }
@@ -605,7 +606,9 @@ private:
 
 		/* save registers, core loop, and restore registers */
 		Label l;
-		head(); fp_init(this, &l); seed(); expand(fp_body, fp_clear, &l, p); tail(); ready();
+		head(); fp_init(this, &l); seed();
+		size_t const n_insns = expand(fp_body, fp_clear, &l, p);
+		tail(); ready();
 
 		/* generate the code for the loop; then run twice. first is for warming up. */
 		auto fn = getCode<void (*)(size_t xs, size_t xc, uint8x16_t vs, uint8x16_t vc)>();
@@ -617,7 +620,7 @@ private:
 		size_t const ns = measure_nsec({ fn(xseed, xconst, vseed, vconst); });
 		return(
 			  ((double)ns * freq)
-			/ ((double)n_insns_tot * (double)n_insns_body * 1000000000.0)
+			/ ((double)n_insns * 1000000000.0)
 		);
 	}
 	double run(op_t fp_body, op_init_t fp_init, op_init_t fp_clear, pattern_t const **q, size_t line = 0) {
@@ -644,15 +647,16 @@ public:
 		uint8x16_t const &_vseed,
 		uint8x16_t const &_vconst,
 		size_t const &_rep,
-		size_t const &_denom
+		size_t const &_div,
+		size_t const &_n_insns_body
 	) : CodeGenerator(4 * 1024 * 1024),
 		freq(_freq),
 		xseed(_xseed),
 		xconst(_xconst),
 		vseed(_vseed),
 		vconst(_vconst),
-		n_insns_tot((_rep * n_insns_tot_base) / _denom),
-		n_insns_body(_denom) {
+		n_insns_tot((_rep * n_insns_tot_base) / (_div * _n_insns_body)),
+		n_insns_body(_n_insns_body) {
 	}
 	bench(
 		double const &_freq,
@@ -661,8 +665,9 @@ public:
 		uint8_t const &_vseed = 1,
 		uint8_t const &_vconst = 1,
 		size_t const &_rep = 1,
-		size_t const &_denom = 1
-	) : bench(_freq, _xseed, _xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst), _rep, _denom) {
+		size_t const &_div = 1,
+		size_t const &_n_insns_body = 1
+	) : bench(_freq, _xseed, _xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst), _rep, _div, _n_insns_body) {
 	}
 	bench(
 		double const &_freq,
@@ -671,8 +676,9 @@ public:
 		uint8_t const &_vseed = 1,
 		uint8_t const &_vconst = 1,
 		size_t const &_rep = 1,
-		size_t const &_denom = 1
-	) : bench(_freq, (size_t)_xseed, (size_t)_xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst), _rep, _denom) {
+		size_t const &_div = 1,
+		size_t const &_n_insns_body = 1
+	) : bench(_freq, (size_t)_xseed, (size_t)_xconst, vdupq_n_u8(_vseed), vdupq_n_u8(_vconst), _rep, _div, _n_insns_body) {
 	}
 
 	void print_pattern(FILE *fp, pattern_t const *p, size_t base = 0) {
@@ -765,19 +771,22 @@ private:
 
 	uint8_t *aligned_malloc(size_t size, size_t align) {
 		void *p = NULL;
-		posix_memalign(&p, align, size);
+		if(posix_memalign(&p, align, size)) { return(NULL); }
 		return((uint8_t *)p);
 	}
 public:
 	memmgr(
 		mem_init_t fp,
 		size_t const &_offset = 0,
-		size_t const &n_pages = 2,
+		size_t const &n_pages = 64,
 		uint64_t const &_rseed = 42
 	) : base(NULL), offset(_offset), mt(_rseed) {
 
 		size_t const size = n_pages * page_size;
-		base = aligned_malloc(size, page_size);
+		base = aligned_malloc(size + page_size, page_size);		/* add margin for offset */
+		memset(base, 0, size + page_size);
+
+		/* note: p might be unaligned due to the offset */
 		void **p = ptr();
 		for(size_t i = 0; i < size / sizeof(void *); i++) {
 			p[i] = fp(this, p, i, size);

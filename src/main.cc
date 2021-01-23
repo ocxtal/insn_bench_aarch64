@@ -33,12 +33,14 @@ void bench_cmp_fp_vec(bool md, double freq);
 void bench_cond_fp(bool md, double freq);
 void bench_conv_fp_vec(bool md, double freq);
 
+#define DEBUG
+
 int main(void) {
 	bool const md = true;
 	init(md, 8);
 
 	#ifdef DEBUG
-	double const freq = 3200000000.0;
+	double const freq = 2000000000.0;
 
 	#else
 	dump_cpuinfo(md);
@@ -51,9 +53,12 @@ int main(void) {
 	double const freq = estimate_cpu_freq(md, 3);
 
 	#endif
-	bench_mov(md, freq);
-	bench_arith(md, freq);
 
+
+	// bench_arith(md, freq);
+	bench_branch(md, freq);
+	// bench_crypto(md, freq);
+	/*
 	bench_load(md, freq);
 	bench_store(md, freq);
 	bench_branch(md, freq);
@@ -79,6 +84,7 @@ int main(void) {
 	bench_cmp_fp_vec(md, freq);
 	bench_cond_fp(md, freq);
 	bench_conv_fp_vec(md, freq);
+	*/
 	return(0);
 }
 

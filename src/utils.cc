@@ -27,6 +27,7 @@ void sigill_trap(int s) {
 static
 void init_sigill_trap(void) {
 	struct sigaction a;
+	memset(&a, 0, sizeof(struct sigaction));
 	a.sa_handler = sigill_trap;
 	sigemptyset(&a.sa_mask);
 	sigaddset(&a.sa_mask, SIGILL);
@@ -59,6 +60,7 @@ void init_process_affinity(size_t core) {
 
 static
 void init_process_affinity(size_t core) {
+	(void)core;
 	return;
 }
 
@@ -154,7 +156,7 @@ void dump_cpuinfo(bool md) {
 static inline
 double estimate_cpu_freq_core(void) {
 	double const coef = 100000000.0;
-	bench b(coef, (size_t)0, 0, 0, 0, 25, 1);
+	bench b(coef, (size_t)0, 0, 0, 0, 25, 1, 1);
 
 	double r = 0.0;
 	for(size_t i = 0; i < 3; i++) {
