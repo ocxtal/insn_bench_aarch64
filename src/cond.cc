@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 void bench_cond(bool md, double freq) {
-	table t(md, "Scalar conditional arith");
+	table t(md, "Scalar condtional arithmetic");
 	bench b(freq);
 
 	t.put("csinc (eq)",                 both(b, op( g->csinc(d->x, d->x, s->x, Cond::EQ) )));
@@ -30,7 +30,7 @@ void bench_cond(bool md, double freq) {
 }
 
 void bench_cond_fp(bool md, double freq) {
-	table t(md, "Floating point conditional select");
+	table t(md, "Floating point condtional select");
 	bench b(freq);
 
 	t.put("fcsel.h (eq)",               both(b, op( g->fcsel(d->h, d->h, s->h, Cond::EQ) )));

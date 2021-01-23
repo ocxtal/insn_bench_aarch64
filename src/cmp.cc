@@ -10,7 +10,7 @@
 #include <algorithm>
 
 void bench_cmp(bool md, double freq) {
-	table t(md, "Scalar integer compare and flag manip");
+	table t(md, "Scalar integer compare and flag manipulation");
 	bench b(freq);
 
 	double const adcs_latency = lat_i(freq, op( g->adcs(d->x, d->x, s->x) ));
@@ -142,7 +142,7 @@ void bench_cmp_fp_vec(bool md, double freq) {
 	t.put("fcmpe.d (reg)",              both(b, op( g->fcmpe(s->d, s->d) ), op( g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency));
 	t.put("fcmpe.d (zero)",             both(b, op( g->fcmpe(s->d, 0.0) ),  op( g->fcsel(d->d, d->d, s->d, Cond::EQ) ), fcsel_latency));
 
-	/* chained compare */
+	/* chained comp */
 	#define thr_body(_i, _body) ({ \
 		thr(b, op( g->adds(s->x, s->x, g->x28); for(size_t j = 0; j < (_i); j++) { _body; } )).thr * (double)(_i); \
 	})

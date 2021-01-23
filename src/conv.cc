@@ -60,7 +60,10 @@ void bench_conv_fp_vec(bool md, double freq) {
 	t.put("fcvtau.s (scl -> reg)",      both(b, op( g->fcvtau(d->x, s->s) ),                        op( g->mov(d->v.d[0], d->x) ), mov_latency ));
 	t.put("fcvtau.d (scl -> reg)",      both(b, op( g->fcvtau(d->x, s->d) ),                        op( g->mov(d->v.d[0], d->x) ), mov_latency ));
 
-	// t.put("bfcvt",                      both(b, op( g->bfcvt(d->h, d->s) )));
+	/* TODO: waiting for xbyak_aarch64 */
+	// t.put("bfcvt",                      both(b, op( g->fcvt(d->h, s->s) )));
+	// t.put("bfcvtn",                     both(b, op( g->fcvt(d->h4, s->s) )));
+	// t.put("bfcvtn2",                    both(b, op( g->fcvt(d->h8, s->s) )));
 	t.put("fjcvtzs",                    both(b, op( g->fjcvtzs(d->w, s->d) ),                       op( g->mov(d->v.s[0], d->w) ), mov_latency));
 
 	// t.put("frint32x.s (scl)",           both(b, op( g->frint32x(d->v.s, s->v.s) )));

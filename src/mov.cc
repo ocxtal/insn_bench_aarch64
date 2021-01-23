@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 void bench_mov(bool md, double freq) {
-	table t(md, "Scalar nop and mov");
+	table t(md, "Scalar nop and move");
 	bench b(freq);
 
 	/* decoder / allocation throughput */
@@ -38,7 +38,7 @@ void bench_mov(bool md, double freq) {
 }
 
 void bench_mov_vec(bool md, double freq) {
-	table t(md, "Vector element mov");
+	table t(md, "Vector element move");
 	bench b(freq);
 
 	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
@@ -131,7 +131,7 @@ void bench_mov_vec(bool md, double freq) {
 }
 
 void bench_perm_vec(bool md, double freq) {
-	table t(md, "Vector perm");
+	table t(md, "Vector permute");
 	bench b(freq);
 
 	t.put("ext.b (>>1)",                both(b, op( g->ext(d->v.b, d->v.b, s->v.b, 1) )));

@@ -30,7 +30,7 @@ void bench_bitwise_logic_vec(bool md, double freq) {
 
 static
 void bench_bitmanip_vec(bool md, double freq) {
-	table t(md, "Vector bitmanip");
+	table t(md, "Vector bit manipulation");
 	bench b(freq);
 
 	/* bitwise blend */

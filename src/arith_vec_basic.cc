@@ -258,7 +258,7 @@ void bench_max_min_vec(bool md, double freq) {
 
 static
 void bench_abd_vec(bool md, double freq) {
-	table t(md, "Vector integer abs-diff");
+	table t(md, "Vector integer absolute difference");
 	bench b(freq);
 
 	t.put("sabd.b",                     both(b, op( g->sabd(d->v.b, d->v.b, s->v.b) )));

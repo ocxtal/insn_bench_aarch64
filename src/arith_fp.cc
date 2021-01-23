@@ -136,7 +136,7 @@ void bench_max_min_fp_vec(bool md, double freq) {
 
 static
 void bench_mul_fp_vec(bool md, double freq) {
-	table t(md, "Floating point mul, mul-acc, and fmadd");
+	table t(md, "Floating point multiply");
 	bench b(freq);
 
 	t.put("fmul.h (scl)",               both(b, op( g->fmul(d->h, d->h, s->h) )));
@@ -156,82 +156,135 @@ void bench_mul_fp_vec(bool md, double freq) {
 	t.put("fnmul.h (scl)",              both(b, op( g->fnmul(d->h, d->h, s->h) )));
 	t.put("fnmul.s (scl)",              both(b, op( g->fnmul(d->s, d->s, s->s) )));
 	t.put("fnmul.d (scl)",              both(b, op( g->fnmul(d->d, d->d, s->d) )));
+	return;
+}
+
+static
+void bench_mla_fp_vec(bool md, double freq) {
+	table t(md, "Floating point multiply-accumulate and fused-multiply add");
+	bench b(freq);
 
 	/* source register range limited */
-	// t.put("fmla.h (elem)",              both(b, op( g->fmla(d->v.h, d->v.h, s->v.h[0]) )));
-	// t.put("fmla.s (elem)",              both(b, op( g->fmla(d->v.s, d->v.s, s->v.s[0]) )));
-	// t.put("fmla.d (elem)",              both(b, op( g->fmla(d->v.d, d->v.d, s->v.d[0]) )));
-	t.put("fmla.h (vec)",               both(b, op( g->fmla(d->v.h, d->v.h, s->v.h) )));
-	t.put("fmla.s (vec)",               both(b, op( g->fmla(d->v.s, d->v.s, s->v.s) )));
-	t.put("fmla.d (vec)",               both(b, op( g->fmla(d->v.d, d->v.d, s->v.d) )));
-	t.put("fmlal.h (vec)",              both(b, op( g->fmlal(d->v.s, d->v.h4, s->v.h4) )));
-	t.put("fmlal2.h (vec)",             both(b, op( g->fmlal2(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("fmla.h (vec)",                       both(b, op( g->fmla(d->v.h, d->v.h, s->v.h) )));
+	t.put("fmla.s (vec)",                       both(b, op( g->fmla(d->v.s, d->v.s, s->v.s) )));
+	t.put("fmla.d (vec)",                       both(b, op( g->fmla(d->v.d, d->v.d, s->v.d) )));
 
-	t.put("fmls.h (vec)",               both(b, op( g->fmls(d->v.h, d->v.h, s->v.h) )));
-	t.put("fmls.s (vec)",               both(b, op( g->fmls(d->v.s, d->v.s, s->v.s) )));
-	t.put("fmls.d (vec)",               both(b, op( g->fmls(d->v.d, d->v.d, s->v.d) )));
-	t.put("fmlsl.h (vec)",              both(b, op( g->fmlsl(d->v.s, d->v.h4, s->v.h4) )));
-	t.put("fmlsl2.h (vec)",             both(b, op( g->fmlsl2(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("fmla.h (vec; acc. fwd.)",            lat(b,  op( g->fmla(g->v28.h, s->v.h, s->v.h) )));
+	t.put("fmla.s (vec; acc. fwd.)",            lat(b,  op( g->fmla(g->v28.s, s->v.s, s->v.s) )));
+	t.put("fmla.d (vec; acc. fwd.)",            lat(b,  op( g->fmla(g->v28.d, s->v.d, s->v.d) )));
 
-	t.put("fmadd.h",                    both(b, op( g->fmadd(d->h, d->h, d->h, s->h) )));
-	t.put("fmadd.s",                    both(b, op( g->fmadd(d->s, d->s, d->s, s->s) )));
-	t.put("fmadd.d",                    both(b, op( g->fmadd(d->d, d->d, d->d, s->d) )));
+	t.put("fmla.h (elem; [7])",                 both(b, op( g->fmla(d->v.h, d->v.h, s->v.h[0]) ),      0.0, lat_patterns, thr_half_patterns));
+	t.put("fmla.s (elem; [3])",                 both(b, op( g->fmla(d->v.s, d->v.s, s->v.s[0]) ),      0.0, lat_patterns, thr_half_patterns));
+	t.put("fmla.d (elem; [1])",                 both(b, op( g->fmla(d->v.d, d->v.d, s->v.d[0]) ),      0.0, lat_patterns, thr_half_patterns));
 
-	t.put("fmsub.h",                    both(b, op( g->fmsub(d->h, d->h, d->h, s->h) )));
-	t.put("fmsub.s",                    both(b, op( g->fmsub(d->s, d->s, d->s, s->s) )));
-	t.put("fmsub.d",                    both(b, op( g->fmsub(d->d, d->d, d->d, s->d) )));
+	t.put("fmlal.h (vec)",                      both(b, op( g->fmlal(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("fmlal2.h (vec)",                     both(b, op( g->fmlal2(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("fmlal.h (vec; acc. fwd.)",           lat(b,  op( g->fmlal(g->v28.s, s->v.h4, s->v.h4) )));
+	t.put("fmlal2.h (vec; acc. fwd.)",          lat(b,  op( g->fmlal2(g->v28.s, s->v.h4, s->v.h4) )));
 
-	t.put("fnmadd.h",                   both(b, op( g->fnmadd(d->h, d->h, d->h, s->h) )));
-	t.put("fnmadd.s",                   both(b, op( g->fnmadd(d->s, d->s, d->s, s->s) )));
-	t.put("fnmadd.d",                   both(b, op( g->fnmadd(d->d, d->d, d->d, s->d) )));
+	t.put("fmls.h (vec)",                       both(b, op( g->fmls(d->v.h, d->v.h, s->v.h) )));
+	t.put("fmls.s (vec)",                       both(b, op( g->fmls(d->v.s, d->v.s, s->v.s) )));
+	t.put("fmls.d (vec)",                       both(b, op( g->fmls(d->v.d, d->v.d, s->v.d) )));
 
-	t.put("fnmsub.h",                   both(b, op( g->fnmsub(d->h, d->h, d->h, s->h) )));
-	t.put("fnmsub.s",                   both(b, op( g->fnmsub(d->s, d->s, d->s, s->s) )));
-	t.put("fnmsub.d",                   both(b, op( g->fnmsub(d->d, d->d, d->d, s->d) )));
+	t.put("fmls.h (vec; acc. fwd.)",            lat(b,  op( g->fmls(g->v28.h, s->v.h, s->v.h) )));
+	t.put("fmls.s (vec; acc. fwd.)",            lat(b,  op( g->fmls(g->v28.s, s->v.s, s->v.s) )));
+	t.put("fmls.d (vec; acc. fwd.)",            lat(b,  op( g->fmls(g->v28.d, s->v.d, s->v.d) )));
 
-	t.put("fcmla.h (elem; deg = 0; v.h[0])",    both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h[0], 0) )));
-	t.put("fcmla.h (elem; deg = 0; v.h[7])",    both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h[7], 0) )));
-	t.put("fcmla.s (elem; deg = 0; v.s[0])",    both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s[0], 0) )));
-	t.put("fcmla.s (elem; deg = 0; v.s[3])",    both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s[3], 0) )));
-	// t.put("fcmla.d (elem; deg = 0; v.h[0])",    both(b, op( g->fcmla(d->v.d, d->v.d, s->v.d[0], 0) )));
-	t.put("fcmla.h (elem; deg = 90; v.h[0])",   both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h[0], 90) )));
-	t.put("fcmla.h (elem; deg = 90; v.h[7])",   both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h[7], 90) )));
-	t.put("fcmla.s (elem; deg = 90; v.s[0])",   both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s[0], 90) )));
-	t.put("fcmla.s (elem; deg = 90; v.s[3])",   both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s[3], 90) )));
-	// t.put("fcmla.d (elem; deg = 90)",   both(b, op( g->fcmla(d->v.d, d->v.d, s->v.d[0], 90) )));
-	t.put("fcmla.h (vec; deg = 0)",     both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h, 0) )));
-	t.put("fcmla.s (vec; deg = 0)",     both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s, 0) )));
-	t.put("fcmla.d (vec; deg = 0)",     both(b, op( g->fcmla(d->v.d, d->v.d, s->v.d, 0) )));
-	t.put("fcmla.h (vec; deg = 90)",    both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h, 90) )));
-	t.put("fcmla.s (vec; deg = 90)",    both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s, 90) )));
-	t.put("fcmla.d (vec; deg = 90)",    both(b, op( g->fcmla(d->v.d, d->v.d, s->v.d, 90) )));
+	t.put("fmls.h (elem; [7])",                 both(b, op( g->fmls(d->v.h, d->v.h, s->v.h[0]) ),      0.0, lat_patterns, thr_half_patterns));
+	t.put("fmls.s (elem; [3])",                 both(b, op( g->fmls(d->v.s, d->v.s, s->v.s[0]) ),      0.0, lat_patterns, thr_half_patterns));
+	t.put("fmls.d (elem; [1])",                 both(b, op( g->fmls(d->v.d, d->v.d, s->v.d[0]) ),      0.0, lat_patterns, thr_half_patterns));
+
+	t.put("fmlsl.h (vec)",                      both(b, op( g->fmlsl(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("fmlsl2.h (vec)",                     both(b, op( g->fmlsl2(d->v.s, d->v.h4, s->v.h4) )));
+	t.put("fmlsl.h (vec; acc. fwd.)",           lat(b,  op( g->fmlsl(g->v28.s, s->v.h4, s->v.h4) )));
+	t.put("fmlsl2.h (vec; acc. fwd.)",          lat(b,  op( g->fmlsl2(g->v28.s, s->v.h4, s->v.h4) )));
+
+	t.put("fmadd.h",                            both(b, op( g->fmadd(d->h, d->h, d->h, s->h) )));
+	t.put("fmadd.s",                            both(b, op( g->fmadd(d->s, d->s, d->s, s->s) )));
+	t.put("fmadd.d",                            both(b, op( g->fmadd(d->d, d->d, d->d, s->d) )));
+
+	t.put("fmadd.h (acc. fwd.)",                lat(b,  op( g->fmadd(g->h28, s->h, s->h, g->h28) )));
+	t.put("fmadd.s (acc. fwd.)",                lat(b,  op( g->fmadd(g->s28, s->s, s->s, g->s28) )));
+	t.put("fmadd.d (acc. fwd.)",                lat(b,  op( g->fmadd(g->d28, s->d, s->d, g->d28) )));
+
+	t.put("fmsub.h",                            both(b, op( g->fmsub(d->h, d->h, d->h, s->h) )));
+	t.put("fmsub.s",                            both(b, op( g->fmsub(d->s, d->s, d->s, s->s) )));
+	t.put("fmsub.d",                            both(b, op( g->fmsub(d->d, d->d, d->d, s->d) )));
+
+	t.put("fmsub.h (acc. fwd.)",                lat(b,  op( g->fmsub(g->h28, s->h, s->h, g->h28) )));
+	t.put("fmsub.s (acc. fwd.)",                lat(b,  op( g->fmsub(g->s28, s->s, s->s, g->s28) )));
+	t.put("fmsub.d (acc. fwd.)",                lat(b,  op( g->fmsub(g->d28, s->d, s->d, g->d28) )));
+
+	t.put("fnmadd.h",                           both(b, op( g->fnmadd(d->h, d->h, d->h, s->h) )));
+	t.put("fnmadd.s",                           both(b, op( g->fnmadd(d->s, d->s, d->s, s->s) )));
+	t.put("fnmadd.d",                           both(b, op( g->fnmadd(d->d, d->d, d->d, s->d) )));
+
+	t.put("fnmadd.h (acc. fwd.)",               lat(b,  op( g->fnmadd(g->h28, s->h, s->h, g->h28) )));
+	t.put("fnmadd.s (acc. fwd.)",               lat(b,  op( g->fnmadd(g->s28, s->s, s->s, g->s28) )));
+	t.put("fnmadd.d (acc. fwd.)",               lat(b,  op( g->fnmadd(g->d28, s->d, s->d, g->d28) )));
+
+	t.put("fnmsub.h",                           both(b, op( g->fnmsub(d->h, d->h, d->h, s->h) )));
+	t.put("fnmsub.s",                           both(b, op( g->fnmsub(d->s, d->s, d->s, s->s) )));
+	t.put("fnmsub.d",                           both(b, op( g->fnmsub(d->d, d->d, d->d, s->d) )));
+
+	t.put("fnmsub.h (acc. fwd.)",               lat(b,  op( g->fnmsub(g->h28, s->h, s->h, g->h28) )));
+	t.put("fnmsub.s (acc. fwd.)",               lat(b,  op( g->fnmsub(g->s28, s->s, s->s, g->s28) )));
+	t.put("fnmsub.d (acc. fwd.)",               lat(b,  op( g->fnmsub(g->d28, s->d, s->d, g->d28) )));
+
+	t.put("fcmla.h (vec; deg = 0)",             both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h, 0) )));
+	t.put("fcmla.s (vec; deg = 0)",             both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s, 0) )));
+	t.put("fcmla.d (vec; deg = 0)",             both(b, op( g->fcmla(d->v.d, d->v.d, s->v.d, 0) )));
+	t.put("fcmla.h (vec; deg = 90)",            both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h, 90) )));
+	t.put("fcmla.s (vec; deg = 90)",            both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s, 90) )));
+	t.put("fcmla.d (vec; deg = 90)",            both(b, op( g->fcmla(d->v.d, d->v.d, s->v.d, 90) )));
+
+	t.put("fcmla.h (vec; deg = 0; acc. fwd.)",  lat(b,  op( g->fcmla(g->v28.h, s->v.h, s->v.h, 0) )));
+	t.put("fcmla.s (vec; deg = 0; acc. fwd.)",  lat(b,  op( g->fcmla(g->v28.s, s->v.s, s->v.s, 0) )));
+	t.put("fcmla.d (vec; deg = 0; acc. fwd.)",  lat(b,  op( g->fcmla(g->v28.d, s->v.d, s->v.d, 0) )));
+	t.put("fcmla.h (vec; deg = 90; acc. fwd.)", lat(b,  op( g->fcmla(g->v28.h, s->v.h, s->v.h, 90) )));
+	t.put("fcmla.s (vec; deg = 90; acc. fwd.)", lat(b,  op( g->fcmla(g->v28.s, s->v.s, s->v.s, 90) )));
+	t.put("fcmla.d (vec; deg = 90; acc. fwd.)", lat(b,  op( g->fcmla(g->v28.d, s->v.d, s->v.d, 90) )));
+
+	t.put("fcmla.h (elem; deg = 0; v.h[7])",    both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h[7], 0) ),  0.0, lat_patterns, thr_half_patterns));
+	t.put("fcmla.s (elem; deg = 0; v.s[3])",    both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s[3], 0) ),  0.0, lat_patterns, thr_half_patterns));
+	t.put("fcmla.h (elem; deg = 90; v.h[7])",   both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h[7], 90) ), 0.0, lat_patterns, thr_half_patterns));
+	t.put("fcmla.s (elem; deg = 90; v.s[3])",   both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s[3], 90) ), 0.0, lat_patterns, thr_half_patterns));
+
+	/* TODO: waiting for xbyak_aarch64 */
+	// t.put("bfmla (vec)",                        both(b, op( g->bfmla(d->v.s, d->v.h, s->v.h) )));
+	// t.put("bfmlalb (vec)",                      both(b, op( g->bfmlalb(d->v.s, d->v.h, s->v.h) )));
+	// t.put("bfmlalt (vec)",                      both(b, op( g->bfmlalt(d->v.s, d->v.h, s->v.h) )));
+	// t.put("bfmlalb (elem)",                     both(b, op( g->bfmlalb(d->v.s, d->v.h, s->v.h[7]) ),   0.0, lat_patterns, thr_half_patterns));
+	// t.put("bfmlalt (elem)",                     both(b, op( g->bfmlalt(d->v.s, d->v.h, s->v.h[7]) ),   0.0, lat_patterns, thr_half_patterns));
+	// t.put("bfdot (vec)",                        both(b, op( g->bfdot(d->v.s, d->v.h, s->v.h) )));
+	// t.put("bfdot (elem)",                       both(b, op( g->bfdot(d->v.s, d->v.h, s->v.h[7]) ),     0.0, lat_patterns, thr_half_patterns));
 	return;
 }
 
 static
 void bench_div_fp_vec(bool md, double freq) {
-	table t(md, "Floating point div and recip");
+	table t(md, "Floating point divide and reciprocal");
 	bench b(freq);
 
 	/* FIXME: fdiv */
 
-	t.put("frecpe.h (scl)",             both(b, op( g->frecpe(d->h, s->h) )));
-	t.put("frecpe.s (scl)",             both(b, op( g->frecpe(d->s, s->s) )));
-	t.put("frecpe.d (scl)",             both(b, op( g->frecpe(d->d, s->d) )));
-	t.put("frecpe.h (vec)",             both(b, op( g->frecpe(d->v.h, s->v.h) )));
-	t.put("frecpe.s (vec)",             both(b, op( g->frecpe(d->v.s, s->v.s) )));
-	t.put("frecpe.d (vec)",             both(b, op( g->frecpe(d->v.d, s->v.d) )));
+	t.put("frecpe.h (scl)",                     both(b, op( g->frecpe(d->h, s->h) )));
+	t.put("frecpe.s (scl)",                     both(b, op( g->frecpe(d->s, s->s) )));
+	t.put("frecpe.d (scl)",                     both(b, op( g->frecpe(d->d, s->d) )));
+	t.put("frecpe.h (vec)",                     both(b, op( g->frecpe(d->v.h, s->v.h) )));
+	t.put("frecpe.s (vec)",                     both(b, op( g->frecpe(d->v.s, s->v.s) )));
+	t.put("frecpe.d (vec)",                     both(b, op( g->frecpe(d->v.d, s->v.d) )));
 
-	t.put("frecps.h (scl)",             both(b, op( g->frecps(d->h, d->h, s->h) )));
-	t.put("frecps.s (scl)",             both(b, op( g->frecps(d->s, d->s, s->s) )));
-	t.put("frecps.d (scl)",             both(b, op( g->frecps(d->d, d->d, s->d) )));
-	t.put("frecps.h (vec)",             both(b, op( g->frecps(d->v.h, d->v.h, s->v.h) )));
-	t.put("frecps.s (vec)",             both(b, op( g->frecps(d->v.s, d->v.s, s->v.s) )));
-	t.put("frecps.d (vec)",             both(b, op( g->frecps(d->v.d, d->v.d, s->v.d) )));
+	t.put("frecps.h (scl)",                     both(b, op( g->frecps(d->h, d->h, s->h) )));
+	t.put("frecps.s (scl)",                     both(b, op( g->frecps(d->s, d->s, s->s) )));
+	t.put("frecps.d (scl)",                     both(b, op( g->frecps(d->d, d->d, s->d) )));
+	t.put("frecps.h (vec)",                     both(b, op( g->frecps(d->v.h, d->v.h, s->v.h) )));
+	t.put("frecps.s (vec)",                     both(b, op( g->frecps(d->v.s, d->v.s, s->v.s) )));
+	t.put("frecps.d (vec)",                     both(b, op( g->frecps(d->v.d, d->v.d, s->v.d) )));
 
-	t.put("frecpx.h (scl)",             both(b, op( g->frecpx(d->h, s->h) )));
-	t.put("frecpx.s (scl)",             both(b, op( g->frecpx(d->s, s->s) )));
-	t.put("frecpx.d (scl)",             both(b, op( g->frecpx(d->d, s->d) )));
+	t.put("frecpx.h (scl)",                     both(b, op( g->frecpx(d->h, s->h) )));
+	t.put("frecpx.s (scl)",                     both(b, op( g->frecpx(d->s, s->s) )));
+	t.put("frecpx.d (scl)",                     both(b, op( g->frecpx(d->d, s->d) )));
 	return;
 }
 

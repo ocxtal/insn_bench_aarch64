@@ -35,8 +35,8 @@ void bench_load(bool md, double freq) {
 	t.put("ldr (imm; pre, ofs = 16)",               lat(h,  op( g->ldr(d->x,   pre_ptr(s->x,  16)) ), 0.0, lat_inc1_pattern));
 	t.put("ldr (imm; post, ofs = 0)",               both(h, op( g->ldr(d[1].x, post_ptr(s->x, 0)) ),  0.0, lat_inc0_pattern, thr_skip3_patterns));
 	t.put("ldr (imm; post, ofs = 16)",              lat(h,  op( g->ldr(d->x,   post_ptr(s->x, 16)) ), 0.0, lat_inc1_pattern));
-	t.put("ldr (ptr -> ptr; imm; pre, ofs = 16)",   lat(h,  op( g->ldr(g->x28, pre_ptr(s->x,  16)); adj8(g, s) ),                                         adj8_latency,     lat_flat0_pattern));
-	t.put("ldr (ptr -> ptr; imm; post, ofs = 16)",  lat(z,  op( g->ldr(g->x28, post_ptr(s->x, 16)); adj8(g, s) ),                                         adj8_latency,     lat_flat0_pattern));
+	t.put("ldr (ptr fwd.; imm; pre, ofs = 16)",     lat(h,  op( g->ldr(g->x28, pre_ptr(s->x,  16)); adj8(g, s) ),                                         adj8_latency,     lat_flat0_pattern));
+	t.put("ldr (ptr fwd.; imm; post, ofs = 16)",    lat(z,  op( g->ldr(g->x28, post_ptr(s->x, 16)); adj8(g, s) ),                                         adj8_latency,     lat_flat0_pattern));
 
 	t.put("ldr (imm; ofs = 0; unaligned)",          both(u, op( g->ldr(d->x,   ptr(s->x,      0)) ),  0.0, lat_inc1_pattern, thr_skip2_patterns));
 	t.put("ldr (imm; ofs = 16; unaligned)",         both(u, op( g->ldr(d->x,   ptr(s->x,      16)) ), 0.0, lat_inc1_pattern, thr_skip2_patterns));
