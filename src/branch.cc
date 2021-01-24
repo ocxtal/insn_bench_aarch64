@@ -155,7 +155,7 @@ void bench_branch(bool md, double freq) {
 
 	/* conditional branch (unpredictable) */ {
 		memmgr m_r(mem_init( g->rnd() ), 0, 128, 42);
-		bench c(freq, NULL, m_r.ptr(), 1, 1, 1, 1, 64);
+		bench c(freq, NULL, m_r.ptr(), 1, 1, 64, 1, 64);
 
 		#define y(_br, _body) { \
 			Label l[16]; \

@@ -60,7 +60,7 @@ void bench_conv_fp_vec(bool md, double freq) {
 	t.put("fcvtau.s (scl -> reg)",      both(b, op( g->fcvtau(d->x, s->s) ),                        op( g->mov(d->v.d[0], d->x) ), mov_latency ));
 	t.put("fcvtau.d (scl -> reg)",      both(b, op( g->fcvtau(d->x, s->d) ),                        op( g->mov(d->v.d[0], d->x) ), mov_latency ));
 
-	/* TODO: waiting for xbyak_aarch64 */
+	/* TODO: waiting for xbyak_aarch64 implement bfloat16 extension */
 	// t.put("bfcvt",                      both(b, op( g->fcvt(d->h, s->s) )));
 	// t.put("bfcvtn",                     both(b, op( g->fcvt(d->h4, s->s) )));
 	// t.put("bfcvtn2",                    both(b, op( g->fcvt(d->h8, s->s) )));

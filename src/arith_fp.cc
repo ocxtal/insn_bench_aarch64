@@ -250,7 +250,7 @@ void bench_mla_fp_vec(bool md, double freq) {
 	t.put("fcmla.h (elem; deg = 90; v.h[7])",   both(b, op( g->fcmla(d->v.h, d->v.h, s->v.h[7], 90) ), 0.0, lat_patterns, thr_half_patterns));
 	t.put("fcmla.s (elem; deg = 90; v.s[3])",   both(b, op( g->fcmla(d->v.s, d->v.s, s->v.s[3], 90) ), 0.0, lat_patterns, thr_half_patterns));
 
-	/* TODO: waiting for xbyak_aarch64 */
+	/* TODO: waiting for xbyak_aarch64 implement bfloat16 extension */
 	// t.put("bfmla (vec)",                        both(b, op( g->bfmla(d->v.s, d->v.h, s->v.h) )));
 	// t.put("bfmlalb (vec)",                      both(b, op( g->bfmlalb(d->v.s, d->v.h, s->v.h) )));
 	// t.put("bfmlalt (vec)",                      both(b, op( g->bfmlalt(d->v.s, d->v.h, s->v.h) )));

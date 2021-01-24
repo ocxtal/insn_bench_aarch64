@@ -251,7 +251,7 @@ void bench_mla_vec(bool md, double freq) {
 	t.put("sdot.b (elem; v.b[0])",          both(b, op( g->sdot(d->v.s, d->v.b, s->v.b4[0]) )));
 	t.put("sdot.b (elem; v.b[3])",          both(b, op( g->sdot(d->v.s, d->v.b, s->v.b4[3]) )));
 
-	/* TODO: waiting for xbyak_aarch64 */
+	/* TODO: waiting for xbyak_aarch64 implement Armv8.6 extension */
 	// t.put("sudot.b (vec)",                  both(b, op( g->sudot(d->v.s, d->v.b, s->v.b) )));
 	// t.put("sudot.b (elem; v.b[0])",         both(b, op( g->sudot(d->v.s, d->v.b, s->v.b4[0]) )));
 	// t.put("sudot.b (elem; v.b[3])",         both(b, op( g->sudot(d->v.s, d->v.b, s->v.b4[3]) )));
