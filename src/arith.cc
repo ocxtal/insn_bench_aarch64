@@ -11,7 +11,19 @@ void bench_basic_arith(bool md, double freq) {
 	table t(md, "Scalar integer add, sub, and neg");
 	bench b(freq);
 
-	double const adc_latency = lat_i(freq, op( g->adc(d->x, d->x, s->x) ));
+	double const adc_latency  = lat_i(freq, op( g->adc(d->x, d->x, s->x) ));
+	double const adcs_latency = lat_i(freq, op( g->adcs(d->x, d->x, s->x) ));
+	#define thr_body(_i, _body) ({ \
+		thr(b, op( g->adds(s->x, s->x, g->x28); for(size_t j = 0; j < (_i); j++) { _body; } )).thr * (double)(_i); \
+	})
+	#define sweep(_body) ({ \
+		measure_t const _l = lat(b, op( g->adcs(s->x, s->x, g->x28); _body; ), adcs_latency); \
+		double const _t = std::max({ \
+			thr_body(1, _body), thr_body(2, _body), thr_body(3, _body), thr_body(4, _body), \
+			thr_body(5, _body), thr_body(6, _body), thr_body(7, _body), thr_body(8, _body) \
+		}); \
+		(measure_t){ .lat = _l.lat, .thr = _t }; \
+	})
 
 	t.put("add (reg)",                  both(b, op( g->add(d->x, d->x, s->x) )));
 	t.put("add (reg<<2)",               both(b, op( g->add(d->x, d->x, s->x, ShMod::LSL, 2) )));
@@ -29,7 +41,8 @@ void bench_basic_arith(bool md, double freq) {
 	t.put("adds (imm<<12)",             both(b, op( g->adds(d->x, s->x, 1, 12) ),                   op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
 	t.put("adc",                        both(b, op( g->adc(d->x, d->x, s->x) )));
-	t.put("adcs",                       both(b, op( g->adcs(d->x, d->x, s->x) )));
+	// t.put("adcs",                       both(b, op( g->adcs(d->x, d->x, s->x) )));
+	t.put("adcs",                       sweep(      g->adcs(s->x, s->x, g->x28) ));
 	
 	t.put("sub (reg)",                  both(b, op( g->sub(d->x, d->x, s->x) )));
 	t.put("sub (reg<<2)",               both(b, op( g->sub(d->x, d->x, s->x, ShMod::LSL, 2) )));
@@ -42,7 +55,8 @@ void bench_basic_arith(bool md, double freq) {
 	t.put("subs (imm<<12)",             both(b, op( g->subs(d->x, s->x, 1, 12) ),                   op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
 	t.put("sbc",                        both(b, op( g->sbc(d->x, d->x, s->x) )));
-	t.put("sbcs",                       both(b, op( g->sbcs(d->x, d->x, s->x) )));
+	// t.put("sbcs",                       both(b, op( g->sbcs(d->x, d->x, s->x) )));
+	t.put("sbcs",                       sweep(      g->sbcs(s->x, s->x, g->x28) ));
 
 	t.put("sub",                        thr(b, op( g->sub(d->x, d->x, s->x) )));
 	/* not implemented in xbyak_aarch64 */
@@ -57,13 +71,17 @@ void bench_basic_arith(bool md, double freq) {
 	t.put("negs (reg<<2)",              both(b, op( g->negs(d->x, s->x, ShMod::LSL, 2) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
 	t.put("ngc",                        both(b, op( g->ngc(d->x, s->x) )));
-	t.put("ngcs",                       both(b, op( g->ngcs(d->x, s->x) ),                          op( g->adc(d->x, d->x, s->x) ), adc_latency));
+	// t.put("ngcs",                       both(b, op( g->ngcs(d->x, s->x) ),                          op( g->adc(d->x, d->x, s->x) ), adc_latency));
+	t.put("ngcs",                       sweep(      g->ngcs(s->x, s->x) ));
+
+	#undef thr_body
+	#undef sweep
 	return;
 }
 
 static
 void bench_mul(bool md, double freq) {
-	table t(md, "Scalar integer mul and mul-acc");
+	table t(md, "Scalar integer multiply and multiply-accumulate");
 	bench b(freq);
 
 	t.put("mul",                        both(b, op( g->mul(d->x, d->x, s->x) )));
@@ -87,7 +105,7 @@ void bench_mul(bool md, double freq) {
 
 static
 void bench_div(bool md, double freq) {
-	table t(md, "Scalar integer div");
+	table t(md, "Scalar integer divide");
 	bench b(freq);
 
 	/* FIXME: vary divisor value */
