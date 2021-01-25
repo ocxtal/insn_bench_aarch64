@@ -54,8 +54,7 @@ int main(void) {
 
 	#endif
 
-
-	bench_branch(md, freq);
+	bench_load_vec(md, freq);
 	bench_ext_arith_vec(md, freq);
 	// bench_crypto(md, freq);
 	/*
