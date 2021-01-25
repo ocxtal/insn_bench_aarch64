@@ -40,7 +40,7 @@ int main(void) {
 	init(md, 8);
 
 	#ifdef DEBUG
-	double const freq = 3200000000.0;
+	double const freq = 2000000000.0;
 
 	#else
 	dump_cpuinfo(md);
@@ -56,6 +56,8 @@ int main(void) {
 
 
 	bench_branch(md, freq);
+	// bench_arith(md, freq);
+	bench_load_vec(md, freq);
 	bench_ext_arith_vec(md, freq);
 	// bench_crypto(md, freq);
 	/*

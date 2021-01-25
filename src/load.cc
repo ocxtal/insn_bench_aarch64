@@ -166,6 +166,9 @@ void bench_load_vec(bool md, double freq) {
 	double const mov_latency     = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
 	double const mov_add_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, 0) )) - mov_latency;
 
+	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->add(d->v.b, d->v.b, g->v28.b); g->mov(d->x, d->v.d[0]) ), 0.0,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->mov(d->x, d->v.d[0]) ), 0.0,     lat_inc1_pattern,      thr_patterns));
+
 	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
 	t.put("ldr.q (imm; ofs = 16)",                  both(h, op( g->ldr(d->q, ptr(s->x,      16)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
 	t.put("ldr.q (imm; ofs = 0; unaligned)",        both(u, op( g->ldr(d->q,                ptr(s->x, 0)) ),  op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));

@@ -11,6 +11,16 @@ void bench_mul_vec(bool md, double freq) {
 	table t(md, "Vector integer multiply");
 	bench b(freq);
 
+	t.put("pmul.b",                         both(b, op( g->pmul(d->v.b, d->v.b, s->v.b) )));
+	t.put("pmull.b",                        both(b, op( g->pmull(d->v.h, d->v.b8, s->v.b8) )));
+	t.put("ext.b (>>1)",                    both(b, op( g->ext(d->v.b, d->v.b, s->v.b, 1) )));
+	t.put("pmull.d",                        both(b, op( g->pmull(d->v.q, d->v.d1, s->v.d1) )));
+	t.put("pmull.d",                        both(b, op( g->pmull(d->v.q, d->v.d1, s->v.d1); g->ext(d->v.b, d->v.b, d->v.b, 1) )));
+	t.put("pmull.d",                        both(b, op( g->pmull(d->v.q, d->v.d1, s->v.d1); g->pmul(d->v.b, d->v.b, d->v.b) )));
+	t.put("ext.b (>>1)",                    both(b, op( g->ext(d->v.b, d->v.b, s->v.b, 1); g->ext(d->v.b, d->v.b, d->v.b, 1) )));
+	t.put("pmull2.d",                       both(b, op( g->pmull2(d->v.q, d->v.d, s->v.d); g->pmull(d->v.q, d->v.d1, s->v.d1) )));
+	t.put("pmull2.d",                       both(b, op( g->pmull2(d->v.q, d->v.d, s->v.d); g->ext(d->v.b, d->v.b, d->v.b, 1) )));
+
 	/* mul */
 	t.put("mul.b (vec)",                    both(b, op( g->mul(d->v.b, d->v.b, s->v.b) )));
 	t.put("mul.h (vec)",                    both(b, op( g->mul(d->v.h, d->v.h, s->v.h) )));
