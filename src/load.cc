@@ -165,33 +165,29 @@ void bench_load_vec(bool md, double freq) {
 	lat_i(freq, op( g->add(d->x, d->x, s->x) ));
 	lat_i(freq, op( g->add(d->x, d->x, s->x) ));
 
-	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->add(d->v.b, d->v.b, g->v28.b); g->mov(d->x, d->v.d[0]) ), 0.0,     lat_inc1_pattern,      thr_patterns));
-	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->mov(d->x, d->v.d[0]) ), 0.0,     lat_inc1_pattern,      thr_patterns));
+	t.put("1", lat(z, op(                                                                g->fcsel(d->d, d->d, s->d, Cond::EQ) )));
+	t.put("1", lat(z, op(                          g->fccmp(s->d, s->d, 0x00, Cond::EQ); g->fcsel(d->d, d->d, s->d, Cond::EQ) )));
+	t.put("1", lat(z, op( g->ldr(d->d, ptr(s->x)); g->fccmp(d->d, s->d, 0x00, Cond::EQ); g->adc(d->x, d->x, g->x28) )));
+	t.put("1", lat(z, op(                          g->fccmp(s->d, s->d, 0x00, Cond::EQ); g->adcs(d->x, d->x, g->x28) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->adcs(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->adc(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
+	// fprintf(stderr, "%f, %f, %f, %f, %f, %f, %f, %f, %f\n", lat0, lat1, lat2, lat3, lat4, lat5, lat6, lat7, lat8);
 
-	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
-	t.put("ldr.q (imm; ofs = 16)",                  both(h, op( g->ldr(d->q, ptr(s->x,      16)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
-/*
-	double const lat0 = lat(z, op(                                                                g->fcsel(d->d, d->d, s->d, Cond::EQ) )).lat;
-	double const lat1 = lat(z, op(                          g->fccmp(s->d, s->d, 0x00, Cond::EQ); g->fcsel(d->d, d->d, s->d, Cond::EQ) )).lat;
-	double const lat2 = lat(z, op( g->ldr(d->d, ptr(s->x)); g->fccmp(d->d, s->d, 0x00, Cond::EQ); g->adc(d->x, d->x, g->x28) )).lat;
-	double const lat3 = lat(z, op(                          g->fccmp(s->d, s->d, 0x00, Cond::EQ); g->adcs(d->x, d->x, g->x28) )).lat;
-	double const lat4 = lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->adcs(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ) )).lat;
-	double const lat5 = lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->adc(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ) )).lat;
-	double const lat6 = lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )).lat;
-	double const lat7 = lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )).lat;
-	double const lat8 = lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )).lat;
-	fprintf(stderr, "%f, %f, %f, %f, %f, %f, %f, %f, %f\n", lat0, lat1, lat2, lat3, lat4, lat5, lat6, lat7, lat8);
-*/
 
-	double const lat4 = lat(z, op( g->ldr(g->q1, ptr(g->x0)); g->ldadd(g->x1, g->x1, ptr(g->x0)) )).lat;
-	fprintf(stderr, "%f\n", lat4);
+	double const lat10 = lat(z, op( g->ldr(g->q1, ptr(g->x0)); g->ldadd(g->x1, g->x1, ptr(g->x0)) )).lat;
+	fprintf(stderr, "%f\n", lat10);
 
-	double const mov1_latency     = lat_i(freq, op( g->mov(d->v.s[0], s->w);                                   g->mov(d->x, d->v.d[0]) ));
-	double const mov2_latency     = lat_i(freq, op( g->mov(d->v.s[0], s->w); g->mov(d->v.s[1], s->w);          g->mov(d->x, d->v.d[0]) ));
-	double const mov3_latency     = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->add(d->v.s, d->v.s, g->v28.s); g->mov(d->x, d->v.d[0]); ));
-	double const mov4_latency     = lat_i(freq, op( g->mov(d->v.d[0], s->x);                                   g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, g->x28) ));
-	double const mov5_latency     = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->add(d->v.s, d->v.s, g->v28.s); g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, g->x28) ));
-	fprintf(stderr, "%f, %f\n", mov1_latency, mov2_latency);
+	double const mov1 = lat_i(freq, op( g->mov(d->v.d[0], s->x);                                   g->mov(d->x, d->v.d[0]) ));
+	double const mov2 = lat_i(freq, op( g->mov(d->v.s[0], s->w); g->mov(d->v.s[1], s->w);          g->mov(d->x, d->v.d[0]) ));
+	double const mov6 = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->v.d[1], s->x);          g->mov(d->x, d->v.d[0]) ));
+	double const mov7 = lat_i(freq, op( g->mov(d->v.d[1], s->x); g->mov(d->v.d[0], s->x);          g->mov(d->x, d->v.d[0]) ));
+	double const mov3 = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->add(d->v.s, d->v.s, g->v28.s); g->mov(d->x, d->v.d[0]); ));
+	double const mov4 = lat_i(freq, op( g->mov(d->v.d[0], s->x);                                   g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, g->x28) ));
+	double const mov5 = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->add(d->v.s, d->v.s, g->v28.s); g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, g->x28) ));
+	fprintf(stderr, "%f, %f, %f, %f, %f, %f, %f\n", mov1, mov2, mov6, mov7, mov3, mov4, mov5);
 
 	/* note: this assumes ldr (simd; 64bit) and ldr (scalar; 64bit) have the same issue-to-arrive latency */
 	#define fwd_x28(_g, _d)		({ (_g)->add((_d)->v.s2, (_d)->v.s2, (_g)->v28.s2); (_g)->mov((_d)->x, (_d)->v.d[0]); (_g)->add((_d)->x, (_d)->x, (_g)->x28); })
@@ -300,6 +296,12 @@ void bench_load_vec(bool md, double freq) {
 	t.put("ld4r.d",                                 both(h, op( g->ld4r(d->v.d, ptr(s->x)) ),                 op( fwd_zero(g, d) ), fwd_zero_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
 /*
+	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->add(d->v.b, d->v.b, g->v28.b); g->mov(d->x, d->v.d[0]) ), 0.0,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->mov(d->x, d->v.d[0]) ), 0.0,     lat_inc1_pattern,      thr_patterns));
+
+	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q, ptr(s->x,      0)) ),            op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+	t.put("ldr.q (imm; ofs = 16)",                  both(h, op( g->ldr(d->q, ptr(s->x,      16)) ),           op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
+
 	t.put("ldr.q (imm; ofs = 0)",                   both(h, op( g->ldr(d->q,                ptr(s->x, 0)) ),  op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
 	t.put("ldr.q (imm; ofs = 16)",                  both(h, op( g->ldr(d->q,                ptr(s->x, 16)) ), op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
 	t.put("ldr.q (imm; ofs = 0; unaligned)",        both(u, op( g->ldr(d->q,                ptr(s->x, 0)) ),  op( g->mov(d->x, d->v.d[0]) ),                                 mov_latency,     lat_inc1_pattern,      thr_patterns));
