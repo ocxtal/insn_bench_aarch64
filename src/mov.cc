@@ -43,18 +43,26 @@ void bench_mov_vec(bool md, double freq) {
 
 	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
 
-	t.put("mov.s (v.s[0] <-> w)",       lat(b, op( g->mov(d->v.s[0], s->w); g->mov(d->w, d->v.s[0]) )));
-	t.put("mov.d (v.d[0] <-> x)",       lat(b, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )));
-	t.put("mov.s (v.s[3] <-> w)",       lat(b, op( g->mov(d->v.s[3], s->w); g->mov(d->w, d->v.s[3]) )));
-	t.put("mov.d (v.d[1] <-> x)",       lat(b, op( g->mov(d->v.d[1], s->x); g->mov(d->x, d->v.d[1]) )));
-	t.put("smov.b (v.b[0] <-> x)",      lat(b, op( g->mov(d->v.b[0], s->w); g->smov(d->w, d->v.b[0]) )));
-	t.put("smov.h (v.h[0] <-> x)",      lat(b, op( g->mov(d->v.h[0], s->w); g->smov(d->w, d->v.h[0]) )));
-	t.put("smov.s (v.s[0] <-> x)",      lat(b, op( g->mov(d->v.s[0], s->w); g->smov(d->x, d->v.s[0]) )));
-	t.put("umov.b (v.b[0] <-> w)",      lat(b, op( g->mov(d->v.b[0], s->w); g->umov(d->w, d->v.b[0]) )));
-	t.put("umov.h (v.h[0] <-> w)",      lat(b, op( g->mov(d->v.h[0], s->w); g->umov(d->w, d->v.h[0]) )));
-	t.put("umov.s (v.s[0] <-> w)",      lat(b, op( g->mov(d->v.s[0], s->w); g->umov(d->w, d->v.s[0]) )));
-	t.put("umov.d (v.d[0] <-> x)",      lat(b, op( g->mov(d->v.d[0], s->x); g->umov(d->x, d->v.d[0]) )));
-	t.put("fmov.d (v.d[0] <-> x)",      lat(b, op( g->fmov(d->v.d[0], s->x); g->fmov(d->x, d->v.d[0]) )));
+	t.put("movi.b",                     thr(b,  op( g->movi(d->v.b, 0xff) )));
+	t.put("movi.h",                     thr(b,  op( g->movi(d->v.h, 0xff) )));
+	t.put("movi.h (<<8)",               thr(b,  op( g->movi(d->v.h, 0xff, ShMod::LSL, 8) )));
+	t.put("movi.s",                     thr(b,  op( g->movi(d->v.s, 0xff) )));
+	t.put("movi.s (<<8)",               thr(b,  op( g->movi(d->v.s, 0xff, ShMod::LSL, 8) )));
+	t.put("movi.d",                     thr(b,  op( g->movi(d->v.d, 0xff) )));
+	t.put("movi.d (<<8)",               thr(b,  op( g->movi(d->v.d, 0xff, ShMod::LSL, 8) )));
+
+	t.put("mov.s (v.s[0] <-> w)",       lat(b,  op( g->mov(d->v.s[0], s->w); g->mov(d->w, d->v.s[0]) )));
+	t.put("mov.d (v.d[0] <-> x)",       lat(b,  op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )));
+	t.put("mov.s (v.s[3] <-> w)",       lat(b,  op( g->mov(d->v.s[3], s->w); g->mov(d->w, d->v.s[3]) )));
+	t.put("mov.d (v.d[1] <-> x)",       lat(b,  op( g->mov(d->v.d[1], s->x); g->mov(d->x, d->v.d[1]) )));
+	t.put("smov.b (v.b[0] <-> x)",      lat(b,  op( g->mov(d->v.b[0], s->w); g->smov(d->w, d->v.b[0]) )));
+	t.put("smov.h (v.h[0] <-> x)",      lat(b,  op( g->mov(d->v.h[0], s->w); g->smov(d->w, d->v.h[0]) )));
+	t.put("smov.s (v.s[0] <-> x)",      lat(b,  op( g->mov(d->v.s[0], s->w); g->smov(d->x, d->v.s[0]) )));
+	t.put("umov.b (v.b[0] <-> w)",      lat(b,  op( g->mov(d->v.b[0], s->w); g->umov(d->w, d->v.b[0]) )));
+	t.put("umov.h (v.h[0] <-> w)",      lat(b,  op( g->mov(d->v.h[0], s->w); g->umov(d->w, d->v.h[0]) )));
+	t.put("umov.s (v.s[0] <-> w)",      lat(b,  op( g->mov(d->v.s[0], s->w); g->umov(d->w, d->v.s[0]) )));
+	t.put("umov.d (v.d[0] <-> x)",      lat(b,  op( g->mov(d->v.d[0], s->x); g->umov(d->x, d->v.d[0]) )));
+	t.put("fmov.d (v.d[0] <-> x)",      lat(b,  op( g->fmov(d->v.d[0], s->x); g->fmov(d->x, d->v.d[0]) )));
 
 	// t.put("mov.b (v.b[0] <-> w)",       lat(b, op( g->mov(d->v.b[0], s->w); g->mov(d->x, d->v.b[0]) )));
 	// t.put("mov.h (v.h[0] <-> x)",       lat(b, op( g->mov(d->v.h[0], s->x); g->mov(d->x, d->v.h[0]) )));
