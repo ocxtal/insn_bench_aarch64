@@ -165,15 +165,30 @@ void bench_load_vec(bool md, double freq) {
 	lat_i(freq, op( g->add(d->x, d->x, s->x) ));
 	lat_i(freq, op( g->add(d->x, d->x, s->x) ));
 
-	t.put("1", lat(z, op(                                                                g->fcsel(d->d, d->d, s->d, Cond::EQ) )));
-	t.put("1", lat(z, op(                          g->fccmp(s->d, s->d, 0x00, Cond::EQ); g->fcsel(d->d, d->d, s->d, Cond::EQ) )));
-	t.put("1", lat(z, op( g->ldr(d->d, ptr(s->x)); g->fccmp(d->d, s->d, 0x00, Cond::EQ); g->adc(d->x, d->x, g->x28) )));
-	t.put("1", lat(z, op(                          g->fccmp(s->d, s->d, 0x00, Cond::EQ); g->adcs(d->x, d->x, g->x28) )));
-	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->adcs(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ) )));
-	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->adc(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ) )));
-	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
-	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
-	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::EQ); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
+
+	t.put("0", lat(z, op( g->mov(g->v0.d[0], g->x0);                                     g->mov(g->x0, g->v0.d[0]) )));
+	t.put("0", lat(z, op( g->mov(g->v0.d[0], g->x0); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]) )));
+	t.put("0", lat(z, op( g->mov(g->v0.d[0], g->x0);                                     g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x28) )));
+	t.put("0", lat(z, op( g->mov(g->v0.d[0], g->x0); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x28) )));
+	t.put("0", lat(z, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+	t.put("0", lat(z, op( g->ldur(g->q0, ptr(g->x0, 0)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+	t.put("0", lat(z, op( g->ldur(g->q0, ptr(g->x0, 1)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+	t.put("0", lat(z, op( g->ldur(g->q0, ptr(g->x0, 63)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+	t.put("0", lat(z, op( g->ldur(g->q0, ptr(g->x0, 16)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+	t.put("0", lat(z, op( g->mov(d->v.s[0], s->w);                                   g->mov(d->w, d->v.s[0]) )));
+	t.put("0", lat(z, op( g->dup(d->v.d, s->x);                                      g->mov(d->x, d->v.d[0]) )));
+	t.put("0", lat(z, op( g->dup(d->v.s, s->w);                                      g->mov(d->w, d->v.s[0]) )));
+
+	t.put("1", lat(z, op(                                                                g->fcsel(d->d, d->d, s->d, Cond::NE) )));
+	t.put("1", lat(z, op(                          g->fccmp(s->d, s->d, 0x00, Cond::NE); g->fcsel(d->d, d->d, s->d, Cond::NE) )));
+	t.put("1", lat(z, op( g->ldr(d->d, ptr(s->x)); g->fccmp(d->d, s->d, 0x00, Cond::NE); g->adc(d->x, d->x, g->x28) )));
+	t.put("1", lat(z, op(                          g->fccmp(s->d, s->d, 0x00, Cond::NE); g->adcs(d->x, d->x, g->x28) )));
+	t.put("1", lat(z, op( g->ldr(g->d0, ptr(g->x0)); g->adcs(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::NE) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->adcs(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::NE) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->adc(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28); g->fccmp(g->d0, g->d1, 0x00, Cond::NE) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::NE); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::NE); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
+	t.put("1", lat(z, op( g->ldr(g->x1, ptr(g->x0)); g->add(g->x0, g->x0, g->x1); g->ldr(g->d0, ptr(g->x0)); g->fccmp(g->d0, g->d1, 0x00, Cond::NE); g->adc(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->add(g->x0, g->x0, g->x28); g->adds(g->x0, g->x0, g->x28) )));
 	// fprintf(stderr, "%f, %f, %f, %f, %f, %f, %f, %f, %f\n", lat0, lat1, lat2, lat3, lat4, lat5, lat6, lat7, lat8);
 
 

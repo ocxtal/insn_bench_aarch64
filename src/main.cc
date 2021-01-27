@@ -40,7 +40,7 @@ int main(void) {
 	init(md, 8);
 
 	#ifdef DEBUG
-	double const freq = 1996666666.0;
+	double const freq = 1997000000.0;
 
 	#else
 	dump_cpuinfo(md);
@@ -53,7 +53,6 @@ int main(void) {
 	double const freq = estimate_cpu_freq(md, 3);
 
 	#endif
-
 
 	bench_load_vec(md, freq);
 	bench_branch(md, freq);
