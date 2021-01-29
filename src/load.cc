@@ -171,8 +171,8 @@ void bench_load_vec(bool md, double freq) {
 	t.put("0", lat(z, op( g->mov(g->v0.d[0], g->x0);                                     g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x28) )));
 	t.put("0", lat(z, op( g->mov(g->v0.d[0], g->x0); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x28) )));
 
-	t.put("0", lat(z, op( g->ldr(g->q0, ptr(g->x0, 0));                                     g->mov(g->x0, g->v0.d[0]) )));
-	t.put("0", lat(z, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]) )));
+	t.put("0", lat(h, op( g->ldr(g->q0, ptr(g->x0, 0));                                     g->mov(g->x0, g->v0.d[0]) )));
+	t.put("0", lat(h, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]) )));
 	t.put("0", lat(z, op( g->ldr(g->q0, ptr(g->x0, 0));                                     g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
 	t.put("0", lat(z, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
 
