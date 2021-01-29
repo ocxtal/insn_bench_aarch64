@@ -40,7 +40,11 @@ int main(void) {
 	init(md, 8);
 
 	#ifdef DEBUG
-	double const freq = 1997000000.0;
+	#  ifdef MHZ
+	double const freq = (double)(MHZ) * 1000000.0;
+	#  else
+	double const freq = estimate_cpu_freq(md, 3);
+	#  endif
 
 	#else
 	dump_cpuinfo(md);
