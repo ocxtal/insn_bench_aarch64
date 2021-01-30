@@ -217,6 +217,15 @@ void bench_load_vec(bool md, double freq) {
 	t.put("ldr-mov", lat(z, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.s2, g->v0.s2, g->v28.s2); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
 	t.put("ldr-mov", lat(z, op( g->ldr(g->q0, ptr(g->x0, 0)); g->ext(g->v0.b, g->v0.b, g->v28.b, 1); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
 
+	t.put("ldr-mov", lat(u, op( g->ldr(g->q0, ptr(g->x0, 0));                                     g->mov(g->x0, g->v0.d[0]) )));
+	t.put("ldr-mov", lat(u, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]) )));
+	t.put("ldr-mov", lat(u, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.s2, g->v0.s2, g->v28.s2); g->mov(g->x0, g->v0.d[0]) )));
+	t.put("ldr-mov", lat(u, op( g->ldr(g->q0, ptr(g->x0, 0)); g->ext(g->v0.b, g->v0.b, g->v28.b, 8); g->mov(g->x0, g->v0.d[0]) )));
+	t.put("ldr-mov", lat(y, op( g->ldr(g->q0, ptr(g->x0, 0));                                     g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+	t.put("ldr-mov", lat(y, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+	t.put("ldr-mov", lat(y, op( g->ldr(g->q0, ptr(g->x0, 0)); g->add(g->v0.s2, g->v0.s2, g->v28.s2); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+	t.put("ldr-mov", lat(y, op( g->ldr(g->q0, ptr(g->x0, 0)); g->ext(g->v0.b, g->v0.b, g->v28.b, 1); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
+
 	/*
 	t.put("0", lat(z, op( g->ldur(g->q0, ptr(g->x0, 0)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
 	t.put("0", lat(z, op( g->ldur(g->q0, ptr(g->x0, 1)); g->add(g->v0.d, g->v0.d, g->v28.d); g->mov(g->x0, g->v0.d[0]); g->add(g->x0, g->x0, g->x1) )));
