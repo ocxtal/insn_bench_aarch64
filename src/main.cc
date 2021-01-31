@@ -59,6 +59,7 @@ int main(void) {
 	#endif
 
 	bench_mov(md, freq);
+	bench_mov_vec(md, freq);
 
 	bench_load(md, freq);
 	bench_store(md, freq);
