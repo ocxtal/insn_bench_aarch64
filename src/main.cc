@@ -58,10 +58,6 @@ int main(void) {
 
 	#endif
 
-	bench_load_vec(md, freq);
-	bench_branch(md, freq);
-	bench_ext_arith_vec(md, freq);
-	/*
 	bench_load(md, freq);
 	bench_store(md, freq);
 	bench_branch(md, freq);
@@ -87,7 +83,6 @@ int main(void) {
 	bench_cmp_fp_vec(md, freq);
 	bench_cond_fp(md, freq);
 	bench_conv_fp_vec(md, freq);
-	*/
 	return(0);
 }
 
