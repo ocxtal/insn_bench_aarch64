@@ -310,25 +310,25 @@ void bench_load_vec(bool md, double freq) {
 	t.put("ld3.d (multi)",                          both(z, op( g->ld3(d->v.d, ptr(s->x)) ),                  op( fwd_lo(g, &d[2], s) ), fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
 	t.put("ld4.d (multi)",                          both(z, op( g->ld4(d->v.d, ptr(s->x)) ),                  op( fwd_lo(g, &d[3], s) ), fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1.b (single; [15])",                   both(z, op( g->ld1(s[3].v.b[15], ptr(s->x)) ),            op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.b (single; [15])",                   both(z, op( g->ld2(s[2].v.b[15], ptr(s->x)) ),            op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.b (single; [15])",                   both(z, op( g->ld3(s[1].v.b[15], ptr(s->x)) ),            op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.b (single; [15])",                   both(z, op( g->ld4(s[0].v.b[15], ptr(s->x)) ),            op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.b (single; [15])",                   both(z, op( g->ld1(s[3].v.b[15], ptr(s->x)) ),            op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2.b (single; [15])",                   both(z, op( g->ld2(s[2].v.b[15], ptr(s->x)) ),            op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.b (single; [15])",                   both(z, op( g->ld3(s[1].v.b[15], ptr(s->x)) ),            op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.b (single; [15])",                   both(z, op( g->ld4(s[0].v.b[15], ptr(s->x)) ),            op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1.h (single; [7])",                    both(z, op( g->ld1(s[3].v.h[7], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.h (single; [7])",                    both(z, op( g->ld2(s[2].v.h[7], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.h (single; [7])",                    both(z, op( g->ld3(s[1].v.h[7], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.h (single; [7])",                    both(z, op( g->ld4(s[0].v.h[7], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.h (single; [7])",                    both(z, op( g->ld1(s[3].v.h[7], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2.h (single; [7])",                    both(z, op( g->ld2(s[2].v.h[7], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.h (single; [7])",                    both(z, op( g->ld3(s[1].v.h[7], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.h (single; [7])",                    both(z, op( g->ld4(s[0].v.h[7], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1.s (single; [3])",                    both(z, op( g->ld1(s[3].v.s[3], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.s (single; [3])",                    both(z, op( g->ld2(s[2].v.s[3], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.s (single; [3])",                    both(z, op( g->ld3(s[1].v.s[3], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.s (single; [3])",                    both(z, op( g->ld4(s[0].v.s[3], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.s (single; [3])",                    both(z, op( g->ld1(s[3].v.s[3], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2.s (single; [3])",                    both(z, op( g->ld2(s[2].v.s[3], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.s (single; [3])",                    both(z, op( g->ld3(s[1].v.s[3], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.s (single; [3])",                    both(z, op( g->ld4(s[0].v.s[3], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
-	t.put("ld1.d (single; [1])",                    both(z, op( g->ld1(s[3].v.d[1], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
-	t.put("ld2.d (single; [1])",                    both(z, op( g->ld2(s[2].v.d[1], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
-	t.put("ld3.d (single; [1])",                    both(z, op( g->ld3(s[1].v.d[1], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
-	t.put("ld4.d (single; [1])",                    both(z, op( g->ld4(s[0].v.d[1], ptr(s->x)) ),             op( fwd_hi(g, d, s) ),     fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
+	t.put("ld1.d (single; [1])",                    both(z, op( g->ld1(s[3].v.d[1], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
+	t.put("ld2.d (single; [1])",                    both(z, op( g->ld2(s[2].v.d[1], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
+	t.put("ld3.d (single; [1])",                    both(z, op( g->ld3(s[1].v.d[1], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[1], thr_skip3_patterns));
+	t.put("ld4.d (single; [1])",                    both(z, op( g->ld4(s[0].v.d[1], ptr(s->x)) ),             op( fwd_hi(g, &s[3], s) ), fwd_latency, &lat_flat_patterns[0], thr_skip4_patterns));
 
 	t.put("ld1r.b",                                 both(z, op( g->ld1r(d->v.b, ptr(s->x)) ),                 op( fwd_lo(g, d, s) ),     fwd_latency, &lat_flat_patterns[3], thr_skip1_patterns));
 	t.put("ld2r.b",                                 both(z, op( g->ld2r(d->v.b, ptr(s->x)) ),                 op( fwd_lo(g, d, s) ),     fwd_latency, &lat_flat_patterns[2], thr_skip2_patterns));
