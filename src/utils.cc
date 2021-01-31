@@ -45,8 +45,6 @@ void init_sigill_trap(void) {
 
 static
 void init_process_affinity(size_t core) {
-
-	printf("binding to core %zu\n", core);
 	pthread_t th = pthread_self();
 	thread_affinity_policy_data_t const policy = { (int)core };
 	thread_port_t mach_thread = pthread_mach_thread_np(th);
