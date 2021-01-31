@@ -58,6 +58,8 @@ int main(void) {
 
 	#endif
 
+	bench_mov(md, freq);
+
 	bench_load(md, freq);
 	bench_store(md, freq);
 	bench_branch(md, freq);
