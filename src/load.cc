@@ -27,7 +27,6 @@ void bench_load(bool md, double freq) {
 
 	#define adj8(_g, _d)           ({ for(size_t i = 0; i < 8; i++) { _g->sub(_d->x, _d->x, 2); } })
 	double const adj8_latency    = lat_i(freq, op( adj8(g, d) ));
-	fprintf(stderr, "%f\n", adj8_latency);
 
 	t.put("ldr (imm; ofs = 0)",                     both(h, op( g->ldr(d->x,   ptr(s->x,      0)) ),  0.0, lat_inc1_pattern, thr_skip2_patterns));
 	t.put("ldr (imm; ofs = 16)",                    both(h, op( g->ldr(d->x,   ptr(s->x,      16)) ), 0.0, lat_inc1_pattern, thr_skip2_patterns));
