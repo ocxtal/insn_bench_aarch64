@@ -24,6 +24,7 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <time.h>
+#include <math.h>
 
 /* C++ */
 #include <functional>
@@ -109,6 +110,8 @@ class table : public printer {
 		{ "| ", " | ", " |", NULL }
 	};
 
+	size_t rat_depth = 0;
+
 	void thdr(void) {
 		leader();
 		printf("%sinstruction%slatency%sthroughput%s\n", seps[md][0], seps[md][1], seps[md][1], seps[md][2]);
@@ -116,12 +119,44 @@ class table : public printer {
 	void tbrk(void) {
 		if(md) { printf("|--------|--------|--------|\n"); }
 	}
+	uint32_t gcd(uint32_t x, uint32_t y) {
+		if(y == 0) { return(x); } else { return(gcd(y, x % y)); }
+	}
+	void estimate_rationel(double x) {
+		struct rat_est_t {
+			double z;
+			uint32_t n;
+			uint32_t d;
+		};
+		std::vector<struct rat_est_t> b;
+		for(size_t i = 1; i < rat_depth; i++) {
+			double const y = x * (double)i;
+			double const z = std::abs(y - std::round(y));
+			uint32_t const n = (uint32_t)std::round(y);
+			uint32_t const d = (uint32_t)i;
+
+			if(gcd(n, d) > 1) { continue; }
+			b.push_back((struct rat_est_t){ .z = z, .n = n, .d = d });
+		}
+		std::sort(b.begin(), b.end(), [](struct rat_est_t const x, struct rat_est_t const y){
+			return(x.z < y.z || x.d < y.d);
+		});
+		if(b[0].d == 1) { b.resize(1); }
+
+		for(size_t i = 0; i < b.size(); i++) {
+			if(i > 0 && i < b.size() - 1 && b[i + 1].z > b[0].z + 0.05) { break; }
+			printf("%s%u/%u", &" (~ \0, "[i == 0 ? 0 : 5], b[i].n, b[i].d);
+		}
+		printf(")");
+	}
+
 public:
 	table(
 		bool _md,
 		char const *title = NULL,
-		size_t depth = 1
-	) : printer(_md, title, depth) {
+		size_t depth = 1,
+		size_t _rat_depth = 0
+	) : printer(_md, title, depth), rat_depth(_rat_depth) {
 		thdr();
 		tbrk();
 	}
@@ -138,6 +173,7 @@ public:
 		printf(fmt[na + (c.lat == 0.0)], c.lat);
 		printf("%s", seps[md][1]);
 		printf(fmt[na + (c.thr == 0.0)], c.thr);
+		if(rat_depth) { estimate_rationel(c.thr); }
 		printf("%s\n", seps[md][2]);
 		#endif
 
@@ -249,17 +285,31 @@ static pattern_t const lat_inc2[] = {
 };
 static pattern_t const *lat_inc2_pattern[] = { (pattern_t const *)&lat_inc2, NULL };
 static pattern_t const lat_inc3[] = {
-	{ 15, 0, 0, 0 },
+	// { 15, 0, 0, 0 },
+	{ 10, 0, 0, 0 },
 	{ 24, 3, 1, 24 },
 	{ 0, 0, 0, 0 }
 };
 static pattern_t const *lat_inc3_pattern[] = { (pattern_t const *)&lat_inc3, NULL };
 static pattern_t const lat_inc4[] = {
-	{ 20, 0, 0, 0 },
+	{ 10, 0, 0, 0 },
 	{ 24, 4, 1, 24 },
 	{ 0, 0, 0, 0 }
 };
 static pattern_t const *lat_inc4_pattern[] = { (pattern_t const *)&lat_inc4, NULL };
+static pattern_t const lat_inc5[] = {
+	{ 10, 0, 0, 0 },
+	{ 25, 5, 1, 25 },
+	{ 0, 0, 0, 0 }
+};
+static pattern_t const *lat_inc5_pattern[] = { (pattern_t const *)&lat_inc5, NULL };
+static pattern_t const lat_inc6[] = {
+	{ 10, 0, 0, 0 },
+	{ 24, 6, 1, 24 },
+	{ 0, 0, 0, 0 }
+};
+static pattern_t const *lat_inc6_pattern[] = { (pattern_t const *)&lat_inc6, NULL };
+
 
 /* default */
 static pattern_t const *lat_patterns[] = {
@@ -418,6 +468,39 @@ static pattern_t const *thr_skip4x_patterns[] = {
 	NULL
 };
 
+dec_thr(20, 1, 1, 120, 5);
+dec_thr(25, 1, 1, 120, 5);
+static pattern_t const *thr_skip5x_patterns[] = {
+	ptr_thr(20, 1, 1, 120, 5),
+	ptr_thr(25, 1, 1, 120, 5),
+	NULL
+};
+
+dec_thr(18, 1, 1, 120, 6);
+dec_thr(24, 1, 1, 120, 6);
+static pattern_t const *thr_skip6x_patterns[] = {
+	ptr_thr(18, 1, 1, 120, 6),
+	ptr_thr(24, 1, 1, 120, 6),
+	NULL
+};
+
+dec_thr(14, 1, 1, 120, 7);
+dec_thr(21, 1, 1, 120, 7);
+dec_thr(28, 1, 1, 120, 7);
+static pattern_t const *thr_skip7x_patterns[] = {
+	ptr_thr(14, 1, 1, 120, 7),
+	ptr_thr(21, 1, 1, 120, 7),
+	ptr_thr(28, 1, 1, 120, 7),
+	NULL
+};
+
+dec_thr(16, 1, 1, 120, 8);
+dec_thr(24, 1, 1, 120, 8);
+static pattern_t const *thr_skip8x_patterns[] = {
+	ptr_thr(16, 1, 1, 120, 8),
+	ptr_thr(24, 1, 1, 120, 8),
+	NULL
+};
 
 /*
  * register bundle for use in `bench` class below
@@ -693,12 +776,8 @@ public:
 		}
 	}
 
-	measure_t lat_(size_t line, op_t fp_body,                                        double offset = 0.0, pattern_t const **q = lat_patterns) {
-		return(lat_(line, fp_body, op_init(), op_init(), offset, q));
-	}
-	measure_t lat_(size_t line, op_t fp_body, op_init_t fp_init,                     double offset = 0.0, pattern_t const **q = lat_patterns) {
-		return(lat_(line, fp_body, fp_init,   op_init(), offset, q));
-	}
+	measure_t lat_(size_t line, op_t fp_body,                                        double offset = 0.0, pattern_t const **q = lat_patterns) { return(lat_(line, fp_body, op_init(), op_init(), offset, q)); }
+	measure_t lat_(size_t line, op_t fp_body, op_init_t fp_init,                     double offset = 0.0, pattern_t const **q = lat_patterns) { return(lat_(line, fp_body, fp_init,   op_init(), offset, q)); }
 	measure_t lat_(size_t line, op_t fp_body, op_init_t fp_init, op_init_t fp_clear, double offset = 0.0, pattern_t const **q = lat_patterns) {
 		(void)line;
 		return((measure_t){
@@ -707,12 +786,8 @@ public:
 		});
 	}
 
-	measure_t thr_(size_t line, op_t fp_body,                                        pattern_t const **q = thr_patterns) {
-		return(thr_(line, fp_body, op_init(), op_init(), q));
-	}
-	measure_t thr_(size_t line, op_t fp_body, op_init_t fp_init,                     pattern_t const **q = thr_patterns) {
-		return(thr_(line, fp_body, fp_init,   op_init(), q));
-	}
+	measure_t thr_(size_t line, op_t fp_body,                                        pattern_t const **q = thr_patterns) { return(thr_(line, fp_body, op_init(), op_init(), q)); }
+	measure_t thr_(size_t line, op_t fp_body, op_init_t fp_init,                     pattern_t const **q = thr_patterns) { return(thr_(line, fp_body, fp_init,   op_init(), q)); }
 	measure_t thr_(size_t line, op_t fp_body, op_init_t fp_init, op_init_t fp_clear, pattern_t const **q = thr_patterns) {
 		(void)line;
 		return((measure_t){
@@ -721,18 +796,10 @@ public:
 		});
 	}
 
-	measure_t both_(size_t line, op_t fp_body,                                                         double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
-		return(both_(line, fp_body, op(),       op_init(), op_init(), offset, lq, tq));
-	}
-	measure_t both_(size_t line, op_t fp_body,                  op_init_t fp_init,                     double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
-		return(both_(line, fp_body, op(),       fp_init,   op_init(), offset, lq, tq));
-	}
-	measure_t both_(size_t line, op_t fp_body,                  op_init_t fp_init, op_init_t fp_clear, double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
-		return(both_(line, fp_body, op(),       fp_init,   fp_clear,  offset, lq, tq));
-	}
-	measure_t both_(size_t line, op_t fp_body, op_t fp_collect,                                        double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
-		return(both_(line, fp_body, fp_collect, op_init(), op_init(), offset, lq, tq));
-	}
+	measure_t both_(size_t line, op_t fp_body,                                                         double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) { return(both_(line, fp_body, op(),       op_init(), op_init(), offset, lq, tq)); }
+	measure_t both_(size_t line, op_t fp_body,                  op_init_t fp_init,                     double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) { return(both_(line, fp_body, op(),       fp_init,   op_init(), offset, lq, tq)); }
+	measure_t both_(size_t line, op_t fp_body,                  op_init_t fp_init, op_init_t fp_clear, double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) { return(both_(line, fp_body, op(),       fp_init,   fp_clear,  offset, lq, tq)); }
+	measure_t both_(size_t line, op_t fp_body, op_t fp_collect,                                        double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) { return(both_(line, fp_body, fp_collect, op_init(), op_init(), offset, lq, tq)); }
 	measure_t both_(size_t line, op_t fp_body, op_t fp_collect, op_init_t fp_init, op_init_t fp_clear, double offset = 0.0, pattern_t const **lq = lat_patterns, pattern_t const **tq = thr_patterns) {
 		return((measure_t){
 			.lat = lat_(

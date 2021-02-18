@@ -70,6 +70,9 @@ void bench_store_to_load(bool md, double freq) {
 	memmgr m_h(mem_init( p ));
 	bench h(freq, m_h.ptr(), m_h.ptr());
 
+	/*
+	 * writing to the same or overlapping address may degrade the throughput (but it seems not the case on Apple M1)
+	 */
 	t.put("str -> ldr (ofs = 0 -> ofs = 0)",            both(h, op( g->str(s->x, ptr(g->x28, 0));  g->ldr(d->x, ptr(g->x28, 0)) )));
 	t.put("str -> ldur (ofs = 0 -> ofs = 1)",           both(h, op( g->str(s->x, ptr(g->x28, 0));  g->ldur(d->x, ptr(g->x28, 1)) )));
 	t.put("stur -> ldr (ofs = 1 -> ofs = 1)",           both(h, op( g->stur(s->x, ptr(g->x28, 1)); g->ldr(d->x, ptr(g->x28, 0)) )));

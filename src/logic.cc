@@ -28,13 +28,13 @@ void bench_bitwise_logic(bool md, double freq, double adc_latency) {
 	t.put("ands (reg>>17; rotate)",     both(b, op( g->ands(d->x, d->x, s->x, ShMod::ROR, 17) ),    op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	t.put("ands (mask imm)",            both(b, op( g->ands(d->x, s->x, 0x1ffc) ),                  op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
-	t.put("orr (reg)",                  both(b, op( g->orr(d->x, g->x28, s->x) )));		/* to prevent from being mov */
+	t.put("orr (reg)",                  both(b, op( g->orr(d->x, g->x28, s->x) )));							/* to prevent from being mov */
 	t.put("orr (reg<<2)",               both(b, op( g->orr(d->x, d->x, s->x, ShMod::LSL, 2) )));
 	t.put("orr (mask imm)",             both(b, op( g->orr(d->x, s->x, 0x1ffc) )));
 	t.put("orn (reg)",                  both(b, op( g->orn(d->x, d->x, s->x) )));
 	t.put("orn (reg<<2)",               both(b, op( g->orn(d->x, d->x, s->x, ShMod::LSL, 2) )));
 
-	t.put("eor (reg)",                  both(b, op( g->eor(d->x, d->x, s->x) )));
+	t.put("eor (reg)",                  both(b, op( g->eor(d->x, d->x, s->x) ), 0.0, lat_inc1_pattern));	/* prevent from being clearing idiom */
 	t.put("eor (reg<<2)",               both(b, op( g->eor(d->x, d->x, s->x, ShMod::LSL, 2) )));
 	t.put("eon (reg)",                  both(b, op( g->eon(d->x, d->x, s->x) )));
 	t.put("eon (reg<<2)",               both(b, op( g->eon(d->x, d->x, s->x, ShMod::LSL, 2) )));
@@ -60,7 +60,7 @@ void bench_shift_bitmanip(bool md, double freq, double adc_latency) {
 	t.put("extr (imm; >>1)",            both(b, op( g->extr(d->x, d->x, s->x, 1) )));
 	t.put("extr (imm; >>17)",           both(b, op( g->extr(d->x, d->x, s->x, 17) )));
 
-	t.put("bfc",                        both(b, op( g->bfc(s->x, 17, 2) ),                          op( g->bfc(d->x, 17, 2) )));
+	t.put("bfc",                        both(b, op( g->bfc(s->x, 17, 2) )));
 	t.put("bfi",                        both(b, op( g->bfi(d->x, s->x, 17, 2) )));
 	t.put("bfm",                        both(b, op( g->bfm(d->x, s->x, 17, 2) )));
 	t.put("bfxil",                      both(b, op( g->bfxil(d->x, s->x, 17, 2) )));

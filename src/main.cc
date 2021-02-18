@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "utils.h"
 
+void bench_port_cap(bool md, double freq);
 void bench_load(bool md, double freq);
 void bench_store(bool md, double freq);
 void bench_branch(bool md, double freq);
@@ -58,9 +59,7 @@ int main(void) {
 
 	#endif
 
-	bench_mov(md, freq);
-	bench_mov_vec(md, freq);
-
+	bench_port_cap(md, freq);
 	bench_load(md, freq);
 	bench_store(md, freq);
 	bench_branch(md, freq);

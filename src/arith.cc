@@ -41,9 +41,8 @@ void bench_basic_arith(bool md, double freq) {
 	t.put("adds (imm<<12)",             both(b, op( g->adds(d->x, s->x, 1, 12) ),                   op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
 	t.put("adc",                        both(b, op( g->adc(d->x, d->x, s->x) )));
-	// t.put("adcs",                       both(b, op( g->adcs(d->x, d->x, s->x) )));
 	t.put("adcs",                       sweep(      g->adcs(s->x, s->x, g->x28) ));
-	
+
 	t.put("sub (reg)",                  both(b, op( g->sub(d->x, d->x, s->x) )));
 	t.put("sub (reg<<2)",               both(b, op( g->sub(d->x, d->x, s->x, ShMod::LSL, 2) )));
 	t.put("sub (imm)",                  both(b, op( g->sub(d->x, s->x, 1) )));
@@ -55,7 +54,6 @@ void bench_basic_arith(bool md, double freq) {
 	t.put("subs (imm<<12)",             both(b, op( g->subs(d->x, s->x, 1, 12) ),                   op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
 	t.put("sbc",                        both(b, op( g->sbc(d->x, d->x, s->x) )));
-	// t.put("sbcs",                       both(b, op( g->sbcs(d->x, d->x, s->x) )));
 	t.put("sbcs",                       sweep(      g->sbcs(s->x, s->x, g->x28) ));
 
 	t.put("sub",                        thr(b, op( g->sub(d->x, d->x, s->x) )));
@@ -71,7 +69,6 @@ void bench_basic_arith(bool md, double freq) {
 	t.put("negs (reg<<2)",              both(b, op( g->negs(d->x, s->x, ShMod::LSL, 2) ),           op( g->adc(d->x, d->x, s->x) ), adc_latency));
 
 	t.put("ngc",                        both(b, op( g->ngc(d->x, s->x) )));
-	// t.put("ngcs",                       both(b, op( g->ngcs(d->x, s->x) ),                          op( g->adc(d->x, d->x, s->x) ), adc_latency));
 	t.put("ngcs",                       sweep(      g->ngcs(s->x, s->x) ));
 
 	#undef thr_body
@@ -109,8 +106,8 @@ void bench_div(bool md, double freq) {
 	bench b(freq);
 
 	/* FIXME: vary divisor value */
-	t.put("sdiv",                       both(b, op( g->sdiv(d->x, d->x, s->x) )));
-	t.put("udiv",                       both(b, op( g->udiv(d->x, d->x, s->x) )));
+	t.put("sdiv",                       both(b, op( g->sdiv(d->x, s->x, g->x28) )));
+	t.put("udiv",                       both(b, op( g->udiv(d->x, s->x, g->x28) )));
 	return;
 }
 

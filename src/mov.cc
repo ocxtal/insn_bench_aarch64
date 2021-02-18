@@ -22,19 +22,15 @@ void bench_mov(bool md, double freq) {
 	t.put("mov (mask imm; 0x1ffffffffffc)", thr(b,  op( g->mov(d->x, 0x1ffffffffffc) )));
 	t.put("mov / movn (imm; 0x1ffc)",       thr(b,  op( g->movn(d->x, 0x1ffc) )));
 	t.put("mov / movn (imm; 0x1ffc<<16)",   thr(b,  op( g->movn(d->x, 0x1ffc, 16) )));
-	t.put("movk",                           thr(b,  op( g->movk(d->x, 0x1ffc) )));
-	t.put("movk (<<16)",                    thr(b,  op( g->movk(d->x, 0x1ffc, 16) )));
-
-	t.put("mvni.h",                         thr(b,  op( g->mvni(d->v.h, 0x11, ShMod::LSL, 0) )));
-	t.put("mvni.s",                         thr(b,  op( g->mvni(d->v.s, 0x11, ShMod::LSL, 0) )));
-	t.put("mvni.h",                         thr(b,  op( g->mvni(d->v.h, 0x11, ShMod::LSL, 8) )));
-	t.put("mvni.s",                         thr(b,  op( g->mvni(d->v.s, 0x11, ShMod::LSL, 8) )));
+	t.put("movk (0x00)",                    thr(b,  op( g->movk(d->x, 0x1ffc) )));
+	t.put("movk (0x1ffc)",                  thr(b,  op( g->movk(d->x, 0x1ffc) )));
+	t.put("movk (0x1ffc<<16)",              thr(b,  op( g->movk(d->x, 0x1ffc, 16) )));
 
 	/* idioms */
-	t.put("eor (reg; zeroing idiom)",       both(b, op( g->eor(d->x, s->x, s->x) )));
-	t.put("eor.b (zeroing idiom)",          both(b, op( g->eor(d->v.b, s->v.b, s->v.b) )));
-	t.put("sub (reg; zeroing idiom)",       both(b, op( g->sub(d->x, s->x, s->x) )));
-	t.put("sub.b (zeroing idiom)",          both(b, op( g->sub(d->v.b, s->v.b, s->v.b) )));
+	t.put("eor (reg; clearing idiom)",      both(b, op( g->eor(d->x, s->x, s->x) )));
+	t.put("sub (reg; clearing idiom)",      both(b, op( g->sub(d->x, s->x, s->x) )));
+	t.put("eor.b (clearing idiom)",         both(b, op( g->eor(d->v.b, s->v.b, s->v.b) )));
+	t.put("sub.b (clearing idiom)",         both(b, op( g->sub(d->v.b, s->v.b, s->v.b) )));
 	return;
 }
 
@@ -44,6 +40,7 @@ void bench_mov_vec(bool md, double freq) {
 
 	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
 
+	/* immediate */
 	t.put("movi.b (0x00)",              thr(b,  op( g->movi(d->v.b, 0x00) )));
 	t.put("movi.h (0x00)",              thr(b,  op( g->movi(d->v.h, 0x00) )));
 	t.put("movi.h (0x00<<8)",           thr(b,  op( g->movi(d->v.h, 0x00, ShMod::LSL, 8) )));
@@ -55,6 +52,13 @@ void bench_mov_vec(bool md, double freq) {
 	t.put("movi.h (0xff<<8)",           thr(b,  op( g->movi(d->v.h, 0xff, ShMod::LSL, 8) )));
 	t.put("movi.s (0xff)",              thr(b,  op( g->movi(d->v.s, 0xff) )));
 	t.put("movi.s (0xff<<8)",           thr(b,  op( g->movi(d->v.s, 0xff, ShMod::LSL, 8) )));
+
+	t.put("mvni.h (0x00)",              thr(b,  op( g->mvni(d->v.h, 0x00, ShMod::LSL, 0) )));
+	t.put("mvni.s (0x00)",              thr(b,  op( g->mvni(d->v.s, 0x00, ShMod::LSL, 0) )));
+	t.put("mvni.h (0x11)",              thr(b,  op( g->mvni(d->v.h, 0x11, ShMod::LSL, 0) )));
+	t.put("mvni.s (0x11)",              thr(b,  op( g->mvni(d->v.s, 0x11, ShMod::LSL, 0) )));
+	t.put("mvni.h (0x11<<8)",           thr(b,  op( g->mvni(d->v.h, 0x11, ShMod::LSL, 8) )));
+	t.put("mvni.s (0x11<<8)",           thr(b,  op( g->mvni(d->v.s, 0x11, ShMod::LSL, 8) )));
 
 	t.put("mov.s (v.s[0] <-> w)",       lat(b,  op( g->mov(d->v.s[0], s->w); g->mov(d->w, d->v.s[0]) )));
 	t.put("mov.d (v.d[0] <-> x)",       lat(b,  op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )));

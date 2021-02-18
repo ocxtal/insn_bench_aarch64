@@ -10,14 +10,16 @@ void bench_conv_fp_vec(bool md, double freq) {
 	table t(md, "Floating point convert");
 	bench b(freq);
 
+	/* FIXME */
 	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
 
-	t.put("scvtf.h (scl; >>2)",         both(b, op( g->scvtf(d->h, s->w, 2) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf.s (scl; >>2)",         both(b, op( g->scvtf(d->s, s->w, 2) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf.d (scl; >>2)",         both(b, op( g->scvtf(d->d, s->x, 2) ), op( g->mov(d->x, d->v.d[0]) ), mov_latency));
-	t.put("scvtf.h (scl; int)",         both(b, op( g->scvtf(d->h, s->w) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf.s (scl; int)",         both(b, op( g->scvtf(d->s, s->w) ), op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf.d (scl; int)",         both(b, op( g->scvtf(d->d, s->x) ), op( g->mov(d->x, d->v.d[0]) ), mov_latency));
+	/* scvtf has scalar -> fp transferring form */
+	t.put("scvtf.h (scl; >>2)",         both(b, op( g->scvtf(d->h, s->w, 2) ),                      op( g->mov(d->w, d->v.s[0]) ), mov_latency));
+	t.put("scvtf.s (scl; >>2)",         both(b, op( g->scvtf(d->s, s->w, 2) ),                      op( g->mov(d->w, d->v.s[0]) ), mov_latency));
+	t.put("scvtf.d (scl; >>2)",         both(b, op( g->scvtf(d->d, s->x, 2) ),                      op( g->mov(d->x, d->v.d[0]) ), mov_latency));
+	t.put("scvtf.h (scl; int)",         both(b, op( g->scvtf(d->h, s->w) ),                         op( g->mov(d->w, d->v.s[0]) ), mov_latency));
+	t.put("scvtf.s (scl; int)",         both(b, op( g->scvtf(d->s, s->w) ),                         op( g->mov(d->w, d->v.s[0]) ), mov_latency));
+	t.put("scvtf.d (scl; int)",         both(b, op( g->scvtf(d->d, s->x) ),                         op( g->mov(d->x, d->v.d[0]) ), mov_latency));
 
 	t.put("scvtf.h (vec; >>2)",         both(b, op( g->scvtf(d->v.h, s->v.h, 2) )));
 	t.put("scvtf.s (vec; >>2)",         both(b, op( g->scvtf(d->v.s, s->v.s, 2) )));
@@ -26,6 +28,7 @@ void bench_conv_fp_vec(bool md, double freq) {
 	t.put("scvtf.s (vec; int)",         both(b, op( g->scvtf(d->v.s, s->v.s) )));
 	t.put("scvtf.d (vec; int)",         both(b, op( g->scvtf(d->v.d, s->v.d) )));
 
+	/* scvtf does not have scalar -> fp transferring form */
 	t.put("fcvt (h -> s)",              both(b, op( g->fcvt(d->s, s->h) )));
 	t.put("fcvt (h -> d)",              both(b, op( g->fcvt(d->d, s->h) )));
 	t.put("fcvt (s -> h)",              both(b, op( g->fcvt(d->h, s->s) )));
@@ -37,9 +40,14 @@ void bench_conv_fp_vec(bool md, double freq) {
 	t.put("fcvtl (s -> d)",             both(b, op( g->fcvtl(d->v.d, s->v.s2) )));
 	t.put("fcvtl2 (h -> s)",            both(b, op( g->fcvtl2(d->v.s, s->v.h) )));
 	t.put("fcvtl2 (s -> d)",            both(b, op( g->fcvtl2(d->v.d, s->v.s) )));
+	t.put("fcvtn (s -> h)",             both(b, op( g->fcvtn(d->v.h4, s->v.s4) )));
+	t.put("fcvtn (d -> s)",             both(b, op( g->fcvtn(d->v.s2, s->v.d2) )));
+	t.put("fcvtn2 (s -> h)",            both(b, op( g->fcvtn2(d->v.h8, s->v.s4) )));
+	t.put("fcvtn2 (d -> s)",            both(b, op( g->fcvtn2(d->v.s4, s->v.d2) )));
 	t.put("fcvtxn",                     both(b, op( g->fcvtxn(d->v.s, s->v.d) )));
 	t.put("fcvtxn2",                    both(b, op( g->fcvtxn2(d->v.s, s->v.d) )));
 
+	/* fcvt{a,m,n,p,z}{s,u} has fp -> scalar transferring form (we only measure a-type conversion) */
 	t.put("fcvtas.h (scl)",             both(b, op( g->fcvtas(d->h, s->h) )));
 	t.put("fcvtas.s (scl)",             both(b, op( g->fcvtas(d->s, s->s) )));
 	t.put("fcvtas.d (scl)",             both(b, op( g->fcvtas(d->d, s->d) )));

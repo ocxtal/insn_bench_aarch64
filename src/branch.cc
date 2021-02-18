@@ -10,8 +10,6 @@
 void bench_branch(bool md, double freq) {
 	table t(md, "Branch");
 
-	// double const add8_latency = lat_i(freq, op( g->add() ));
-
 	/* unconditional branch */ {
 		bench b(freq, (size_t)0, (size_t)1);
 
@@ -100,6 +98,11 @@ void bench_branch(bool md, double freq) {
 			Label l;
 			g->cbz(g->x27, l); g->L(l); g->add(g->x0, g->x0, g->x1); g->add(g->x0, g->x0, g->x1);
 		), 0.0, lat_patterns, lat_patterns));
+		t.put("cbz (pc+4; taken) // b (pc+4)", thr(b, op(
+			Label l[2];
+			g->cbz(g->x27, l[0]); g->L(l[0]); g->b(l[1]); g->L(l[1]);
+		), lat_inc2_pattern));
+
 
 		t.put("cbz (pc+4; not taken)", both(b, op(
 			Label l;
@@ -113,6 +116,10 @@ void bench_branch(bool md, double freq) {
 			Label l;
 			g->cbz(g->x28, l); g->L(l); g->add(g->x0, g->x0, g->x1); g->add(g->x0, g->x0, g->x1);
 		), 0.0, lat_patterns, lat_patterns));
+		t.put("cbz (pc+4; not taken) // b (pc+4)", thr(b, op(
+			Label l[2];
+			g->cbz(g->x28, l[0]); g->L(l[0]); g->b(l[1]); g->L(l[1]);
+		), lat_inc2_pattern));
 
 		t.put("cbnz (pc+4; taken)", both(b, op(
 			Label l;
@@ -151,6 +158,17 @@ void bench_branch(bool md, double freq) {
 			g->adds(g->x28, g->x28, g->x1);
 			g->b(Cond::EQ, l); g->L(l);
 		), 0.0, lat_patterns, lat_patterns));
+
+		t.put("fcmp -> b.eq (pc+4; taken)", both(b, op(
+			Label l;
+			g->fcmp(g->s28, g->s28);
+			g->b(Cond::EQ, l); g->L(l);
+		), 0.0, lat_patterns, lat_patterns));
+		t.put("fcmp -> b.ne (pc+4; not taken)", both(b, op(
+			Label l;
+			g->fcmp(g->s28, g->s28);
+			g->b(Cond::NE, l); g->L(l);
+		), 0.0, lat_patterns, lat_patterns));
 	}
 
 	/* conditional branch (unpredictable) */ {
@@ -176,6 +194,14 @@ void bench_branch(bool md, double freq) {
 			0.0, lat_patterns, lat_patterns \
 		)
 
+		/*
+		#define x(_br, _n, _body) { \
+			g->and_;
+		}
+		#undef x
+		*/
+
+		/* scalar cbz */
 		#define x(_br, _n, _body) { \
 			g->and_(g->x##_n, g->x17, 0x01<<(_n)); g->_br(g->x##_n, l[_n]); g->L(l[_n]); _body; \
 		}
@@ -187,6 +213,7 @@ void bench_branch(bool md, double freq) {
 		t.put("and -> cbnz (pc+4; full random) // add x 2 (chain)", z(cbnz, g->add(g->x18, g->x18, g->x19); g->add(g->x18, g->x18, g->x19); ));
 		#undef x
 
+		/* scalar tbz */
 		#define x(_br, _n, _body) { \
 			g->_br(g->x17, _n, l[_n]); g->L(l[_n]); _body; \
 		}
