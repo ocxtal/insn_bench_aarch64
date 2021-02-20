@@ -11,6 +11,9 @@ void bench_conv_fp_vec(bool md, double freq) {
 	bench b(freq);
 
 	/* FIXME */
+	// double const fmov_mov_add = lat(z, op( g->fmov(d->d, g->x0); g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, g->x28) )).lat;
+	// double const fmov_fwd     = lat(z, op( g->fmov(d->d, s->x);  fwd_lo(g, d, s) )).lat;
+	// double const fwd_latency  = floor(fmov_fwd - fmov_mov_add / 2.0 + 0.5);
 	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
 
 	/* scvtf has scalar -> fp transferring form */

@@ -141,11 +141,11 @@ void bench_shift_vec(bool md, double freq) {
 	t.put("sqrshl.d",                   both(b, op( g->sqrshl(d->v.d, d->v.d, s->v.d) )));
 
 	t.put("shll.b (<<8)",               both(b, op( g->shll(d->v.h, s->v.b8, 8) )));
-	t.put("shll.h (<<16)",               both(b, op( g->shll(d->v.s, s->v.h4, 16) )));
-	t.put("shll.s (<<32)",               both(b, op( g->shll(d->v.d, s->v.s2, 32) )));
+	t.put("shll.h (<<16)",              both(b, op( g->shll(d->v.s, s->v.h4, 16) )));
+	t.put("shll.s (<<32)",              both(b, op( g->shll(d->v.d, s->v.s2, 32) )));
 	t.put("shll2.b (<<8)",              both(b, op( g->shll2(d->v.h, s->v.b, 8) )));
-	t.put("shll2.h (<<16)",              both(b, op( g->shll2(d->v.s, s->v.h, 16) )));
-	t.put("shll2.s (<<32)",              both(b, op( g->shll2(d->v.d, s->v.s, 32) )));
+	t.put("shll2.h (<<16)",             both(b, op( g->shll2(d->v.s, s->v.h, 16) )));
+	t.put("shll2.s (<<32)",             both(b, op( g->shll2(d->v.d, s->v.s, 32) )));
 
 	t.put("sshll.b (<<2)",              both(b, op( g->sshll(d->v.h, s->v.b8, 2) )));
 	t.put("sshll.h (<<2)",              both(b, op( g->sshll(d->v.s, s->v.h4, 2) )));

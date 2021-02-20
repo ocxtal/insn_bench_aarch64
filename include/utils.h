@@ -554,7 +554,7 @@ typedef std::function<void (CodeGenerator *, Label *)> op_init_t;
 /*
  * provides prologue and epilogue for benchmarking
  */
-class bench : CodeGenerator {
+class bench : public CodeGenerator {
 private:
 	/* for computing cycles per instruction */
 	double const freq = 0.0;
