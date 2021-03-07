@@ -59,8 +59,6 @@ int main(int argc, char *argv[]) {
 
 	#endif
 
-	bench_conv_fp_vec(md, freq);
-
 	bench_load(md, freq);
 	bench_store(md, freq);
 	bench_branch(md, freq);
