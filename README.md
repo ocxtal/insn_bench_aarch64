@@ -11,7 +11,7 @@ $ ./insn_bench_aarch64 > result.txt               # dump in tsv, -m for dump in 
 
 ## Results
 
-The results on Apple M1 Firestorm is [here](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/apple_m1_firestorm.md). My brief notes on M1 code tuning is [here](xxx).
+The results on Apple M1 Firestorm is [here](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/apple_m1_firestorm.md). My brief notes on M1 code tuning is [here](https://github.com/ocxtal/insn_bench_aarch64/blob/master/optimization_notes_apple_m1.md).
 
 ## Copyright and License
 
