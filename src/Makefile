@@ -9,7 +9,7 @@ LDFLAGS  += -L../xbyak_aarch64/lib -lxbyak_aarch64 ../utils/utils.o
 all: $(TARGET)
 
 %.o:%.cc
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -DMHZ=3200 -c -o $@ $< -MMD -MP -MF $(@:.o=.d)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c -o $@ $< -MMD -MP -MF $(@:.o=.d)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
