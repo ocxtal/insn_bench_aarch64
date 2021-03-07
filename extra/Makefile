@@ -1,0 +1,23 @@
+
+SRCS   := $(shell bash -c "ls *.cc")
+OBJS   := $(SRCS:cc=o)
+TARGET := portcap
+
+INCFLAGS += -I../utils -I../xbyak_aarch64/xbyak_aarch64
+LDFLAGS  += -L../xbyak_aarch64/lib -lxbyak_aarch64 ../utils/utils.o
+
+all: $(TARGET)
+
+%.o:%.cc
+	echo $(SRCS)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c -o $@ $< -MMD -MP -MF $(@:.o=.d)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+
+clean:
+	$(RM) -f $(TARGET) *.o *.d
+
+-include $(SRCS:cc=d)
+
+.PHONY: all
