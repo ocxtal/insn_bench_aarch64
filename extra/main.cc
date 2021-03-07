@@ -5,6 +5,7 @@
  * @author Hajime Suzuki
  */
 #include <stdio.h>
+#include <string.h>
 #include "utils.h"
 
 void bench_port_cap(bool md, double freq);
@@ -12,7 +13,7 @@ void bench_port_cap(bool md, double freq);
 #define DEBUG
 
 int main(int argc, char *argv[]) {
-	bool const md = argc == 2 && std::strcmp(argv[1], "-m") == 0;
+	bool const md = argc == 2 && strcmp(argv[1], "-m") == 0;
 	init(md, 8);
 
 	#ifdef DEBUG
