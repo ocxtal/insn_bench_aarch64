@@ -185,7 +185,7 @@ void bench_branch(bool md, double freq) {
 		}
 		#define z(_br, _body) both(c, \
 			op( \
-				g->ldr(g->x17, pre_ptr(g->x16, 0)); \
+				g->ldr(g->x17, ptr(g->x16)); \
 				y(_br, _body); y(_br, _body); y(_br, _body); y(_br, _body); \
 			), \
 			op(), \
@@ -226,6 +226,45 @@ void bench_branch(bool md, double freq) {
 		#undef x
 		#undef y
 		#undef z
+
+		#if 1
+		/* fp fcmp */
+		#define y(_body) { \
+			Label l[16]; \
+			x(0, _body);  x(1, _body);  x(2, _body);  x(3, _body); \
+			x(4, _body);  x(5, _body);  x(6, _body);  x(7, _body); \
+			x(8, _body);  x(9, _body);  x(10, _body); x(11, _body); \
+			x(12, _body); x(13, _body); x(14, _body); x(15, _body); \
+			g->ushr(g->d17, g->d17, 16); \
+		}
+		#define z(_body) both(c, \
+			op( \
+				g->ldr(g->d17, ptr(g->x16)); \
+				y(_body); y(_body); y(_body); y(_body); \
+			), \
+			op(), \
+			op_init( g->mov(g->x28, 1); g->fmov(g->d1, g->x28); ), \
+			op_init( g->add(g->x28, g->x28, 0x02); g->mov(g->x16, g->x28); ), \
+			0.0, lat_patterns, lat_patterns \
+		)
+		#define x(_n, _body) { \
+			if((_n)) { g->ushr(g->d16, g->d17, (_n)); } \
+			g->and_(g->v16.b, g->v16.b, g->v28.b); \
+			g->fcmp(g->d16, 0.0); \
+			g->b(Cond::EQ, l[_n]); \
+			g->L(l[_n]); \
+			_body; \
+		}
+		t.put("tbz (pc+4; full random)",                            z( ; ));
+		t.put("tbnz (pc+4; full random)",                           z( ; ));
+		t.put("tbz (pc+4; full random) // add (chain)",             z( g->add(g->x18, g->x18, g->x19); ));
+		t.put("tbnz (pc+4; full random) // add (chain)",            z( g->add(g->x18, g->x18, g->x19); ));
+		t.put("tbz (pc+4; full random) // add x 2 (chain)",         z( g->add(g->x18, g->x18, g->x19); g->add(g->x18, g->x18, g->x19); ));
+		t.put("tbnz (pc+4; full random) // add x 2 (chain)",        z( g->add(g->x18, g->x18, g->x19); g->add(g->x18, g->x18, g->x19); ));
+		#undef x
+		#undef y
+		#undef z
+		#endif
 	}
 	return;
 }

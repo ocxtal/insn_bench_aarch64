@@ -67,6 +67,8 @@ op_col_fn(adc_x,               ({ g->adc(s->x, s->x, s->x); }) )
 op_col_fn(adds_x,              ({ g->adds(s->x, s->x, s->x); }) )
 op_col_fn(adcs_x,              ({ g->adcs(s->x, s->x, g->x28); }) )
 op_col_fn(mul_x,               ({ g->mul(s->x, s->x, s->x); }) )
+op_col_fn(mul_x0,              ({ g->mul(g->x0, g->x0, g->x0); }) )
+op_col_fn(mul_x1,              ({ g->mul(g->x1, g->x1, g->x1); }) )
 op_col_fn(madd_x,              ({ g->madd(s->x, s->x, s->x, g->x28); }) )
 op_col_fn(udiv_x_x28,          ({ g->udiv(s->x, s->x, g->x28); }) )
 op_col_fn(bfm_x,               ({ g->bfm(s->x, s->x, 17, 2); }) )
@@ -83,18 +85,37 @@ op_col_fn(movi_adc_x_prev,     ({ g->mov(s->x, 0x1ffc); g->adc(s->x, s[-1].x, s-
 /* floating point arith and misc */
 op_col_fn(fcmp_s,              ({ g->fcmp(s->s, s->s); }) )
 op_col_fn(fcmp_0,              ({ g->fcmp(s->s, 0.0); }) )
+op_col_fn(fcmp_0_adc_x,        ({ g->fcmp(s->s, 0.0); g->adc(s->x, s->x, s->x); }) )
 op_col_fn(fcsel_s,             ({ g->fcsel(s->s, s->s, s->s, Cond::EQ); }) )
+op_col_fn(adds_fcsel_s,        ({ g->adds(s->x, s->x, s->x); g->fcsel(s->s, s->s, s->s, Cond::EQ); }) )
 op_col_fn(fcvtas_s,            ({ g->fcvtas(s->s, s->s); }) )
 op_col_fn(fcvtas_x,            ({ g->fcvtas(s->x, s->s); }) )
+op_col_fn(fjcvtzs_d,           ({ g->fjcvtzs(s->w, s->d); }) )
 op_col_fn(scvtf_w,             ({ g->scvtf(s->s, s->w); }) )
 op_col_fn(frecpe_s,            ({ g->frecpe(s->s, s->s); }) )
 op_col_fn(frsqrte_s,           ({ g->frsqrte(s->s, s->s); }) )
 op_col_fn(fmov_d_x,            ({ g->fmov(s->d, s->x); }) )
+op_col_fn(fmov_x_d,            ({ g->fmov(s->x, s->d); }) )
+op_col_fn(dup_d_x,             ({ g->dup(s->v.d, s->x); }) )
 op_col_fn(mov_x_d,             ({ g->mov(s->x, s->v.d[0]); }) )
+op_col_fn(mov_x_d1,            ({ g->mov(s->x, s->v.d[1]); }) )
 
 /* SIMD arith */
 op_col_fn(add_v,               ({ g->add(s->v.b, s->v.b, s->v.b); }) )
 op_col_fn(eor_v,               ({ g->eor(s->v.b, s->v.b, s->v.b); }) )
+
+/* crypto */
+op_col_fn(sha1c_v,             ({ g->sha1c(s->q, s->s, s->v.s); }) )
+op_col_fn(sha1h_v,             ({ g->sha1h(s->s, s->s); }) )
+op_col_fn(sha1m_v,             ({ g->sha1m(s->q, s->s, s->v.s); }) )
+op_col_fn(sha1p_v,             ({ g->sha1p(s->q, s->s, s->v.s); }) )
+op_col_fn(sha1su0_v,           ({ g->sha1su0(s->v.s, s->v.s, s->v.s); }) )
+op_col_fn(sha1su1_v,           ({ g->sha1su1(s->v.s, s->v.s); }) )
+
+op_col_fn(sha256h_v,           ({ g->sha256h(s->q, s->q, s->v.s); }) )
+op_col_fn(sha256h2_v,          ({ g->sha256h2(s->q, s->q, s->v.s); }) )
+op_col_fn(sha256su0_v,         ({ g->sha256su0(s->v.s, s->v.s); }) )
+op_col_fn(sha256su1_v,         ({ g->sha256su1(s->v.s, s->v.s, s->v.s); }) )
 
 /* branch */
 op_col_fn(b_pc4,               ({ Label l; g->b(l); g->L(l); }) )
@@ -178,6 +199,12 @@ void bench_cap_base(bool md, double freq) {
 		(measure_t){ .lat = _l.lat, .thr = _t }; \
 	})
 
+	t.put("mul (chain) // div", col(b, mul_x0, udiv_x_x28));
+	t.put("mul (chain) x 2 // div", col(b, mul_x0, mul_x1, udiv_x_x28));
+	t.put("mul (chain) x 3 // div", col(b, mul_x0, mul_x1, mul_x0, udiv_x_x28));
+	t.put("mul (chain) x 4 // div", col(b, mul_x0, mul_x1, mul_x0, mul_x1, udiv_x_x28));
+
+
 	t.put("add",                                            both(b, op( g->add(d->x, d->x, s->x) )));
 	t.put("add (<<2)",                                      both(b, op( g->add(d->x, d->x, s->x, ShMod::LSL, 2) )));
 	t.put("add (<<2)",                                      both(b, op( g->add(d->x, s->x, d->x, ShMod::LSL, 2) )));
@@ -197,13 +224,25 @@ void bench_cap_base(bool md, double freq) {
 	t.put("fcsel.s",                                        thr(b,  op( g->fcsel(d->s, d->s, s->s, Cond::EQ) )));
 	t.put("fcvtas.s (s -> s)",                              thr(b,  op( g->fcvtas(d->s, s->s) )));
 	t.put("fcvtas.s (s -> x)",                              thr(b,  op( g->fcvtas(d->x, s->s) )));
-	t.put("scvtf.s (x -> x)",                               thr(b,  op( g->scvtf(d->s, s->w) )));
+	t.put("scvtf.s (x -> s)",                               thr(b,  op( g->scvtf(d->s, s->w) )));
 	t.put("frecpe.s (scl)",                                 thr(b,  op( g->frecpe(d->s, s->s) )));
 	t.put("frsqrte.s (scl)",                                thr(b,  op( g->frsqrte(d->s, s->s) )));
 	t.put("fmov.d (x -> d)",                                thr(b,  op( g->fmov(d->d, s->x); )));
 	t.put("mov (d[0] -> x)",                                thr(b,  op( g->mov(d->x, s->v.d[0]); )));
 
 	t.put("add.b",                                          thr(b,  op( g->add(d->v.b, s->v.b, s->v.b) )));
+
+	t.put("sha1c",                                          thr(b,  op( g->sha1c(d->q, d->s, s->v.s) )));
+	t.put("sha1h",                                          thr(b,  op( g->sha1h(d->s, s->s) )));
+	t.put("sha1m",                                          thr(b,  op( g->sha1m(d->q, d->s, s->v.s) )));
+	t.put("sha1p",                                          thr(b,  op( g->sha1p(d->q, d->s, s->v.s) )));
+	t.put("sha1su0",                                        thr(b,  op( g->sha1su0(d->v.s, d->v.s, s->v.s) )));
+	t.put("sha1su1",                                        thr(b,  op( g->sha1su1(d->v.s, s->v.s) )));
+
+	t.put("sha256h",                                        thr(b,  op( g->sha256h(d->q, d->q, s->v.s) )));
+	t.put("sha256h2",                                       thr(b,  op( g->sha256h2(d->q, d->q, s->v.s) )));
+	t.put("sha256su0",                                      thr(b,  op( g->sha256su0(d->v.s, s->v.s) )));
+	t.put("sha256su1",                                      thr(b,  op( g->sha256su1(d->v.s, d->v.s, s->v.s) )));
 
 	t.put("eor (reg; clearing idiom)",                      thr(b,  op( g->eor(d->x, s->x, s->x) )));
 	t.put("eor.b (reg; clearing idiom)",                    thr(b,  op( g->eor(d->v.b, s->v.b, s->v.b) )));
@@ -678,6 +717,7 @@ void bench_cap_transfer(bool md, double freq) {
 	t.put("fcmp.s (reg)",                                   col(b, fcmp_s));
 	t.put("fcmp.s (zero)",                                  col(b, fcmp_0));
 	t.put("fcsel.s",                                        col(b, fcsel_s));
+	t.put("adds -> fcsel.s",                                col(b, adds_fcsel_s));
 	t.put("fcvtas.s (s -> s)",                              col(b, fcvtas_s));
 	t.put("fcvtas.s (s -> x)",                              col(b, fcvtas_x));
 	t.put("scvtf.s (x -> x)",                               col(b, scvtf_w));
@@ -686,37 +726,18 @@ void bench_cap_transfer(bool md, double freq) {
 	t.put("fmov.d (x -> d)",                                col(b, fmov_d_x));
 	t.put("mov (d[0] -> x)",                                col(b, mov_x_d));
 
+	/* x -> d w/o broadcasting */
 	t.put("add x 3 // fmov.d (x -> d) x 3",                 col(b, add_x, add_x, add_x,                         fmov_d_x, fmov_d_x, fmov_d_x));
 	t.put("add x 4 // fmov.d (x -> d) x 3",                 col(b, add_x, add_x, add_x, add_x,                  fmov_d_x, fmov_d_x, fmov_d_x));
 	t.put("add x 5 // fmov.d (x -> d) x 3",                 col(b, add_x, add_x, add_x, add_x, add_x,           fmov_d_x, fmov_d_x, fmov_d_x));
 	t.put("adc x 3 // fmov.d (x -> d) x 3",                 col(b, adc_x, adc_x, adc_x,                         fmov_d_x, fmov_d_x, fmov_d_x));
+
+	t.put("add.b x 2 // fmov.d (x -> d) x 3",               col(b, add_v, add_v,                                fmov_d_x, fmov_d_x, fmov_d_x));
+	t.put("add.b x 2 // fmov.d (x -> d) x 4",               col(b, add_v, add_v,                                fmov_d_x, fmov_d_x, fmov_d_x, fmov_d_x));
+	t.put("add.b x 3 // fmov.d (x -> d) x 3",               col(b, add_v, add_v, add_v,                         fmov_d_x, fmov_d_x, fmov_d_x));
+	t.put("add.b x 3 // fmov.d (x -> d) x 4",               col(b, add_v, add_v, add_v,                         fmov_d_x, fmov_d_x, fmov_d_x, fmov_d_x));
 	t.put("add.b x 4 // fmov.d (x -> d) x 3",               col(b, add_v, add_v, add_v, add_v,                  fmov_d_x, fmov_d_x, fmov_d_x));
-
-	t.put("add // mov.d (d -> x)",                          col(b, add_x,                                       mov_x_d));
-	t.put("add x 2 // mov.d (d -> x)",                      col(b, add_x, add_x,                                mov_x_d));
-	t.put("add x 3 // mov.d (d -> x)",                      col(b, add_x, add_x, add_x,                         mov_x_d));
-	t.put("add x 4 // mov.d (d -> x)",                      col(b, add_x, add_x, add_x, add_x,                  mov_x_d));
-	t.put("add x 5 // mov.d (d -> x)",                      col(b, add_x, add_x, add_x, add_x, add_x,           mov_x_d));
-	t.put("add x 6 // mov.d (d -> x)",                      col(b, add_x, add_x, add_x, add_x, add_x, add_x,    mov_x_d));
-
-	t.put("add // mov.d (d -> x) x 2",                      col(b, add_x,                                       mov_x_d, mov_x_d));
-	t.put("add x 2 // mov.d (d -> x) x 2",                  col(b, add_x, add_x,                                mov_x_d, mov_x_d));
-	t.put("add x 3 // mov.d (d -> x) x 2",                  col(b, add_x, add_x, add_x,                         mov_x_d, mov_x_d));
-	t.put("add x 4 // mov.d (d -> x) x 2",                  col(b, add_x, add_x, add_x, add_x,                  mov_x_d, mov_x_d));
-	t.put("add x 5 // mov.d (d -> x) x 2",                  col(b, add_x, add_x, add_x, add_x, add_x,           mov_x_d, mov_x_d));
-	t.put("add x 6 // mov.d (d -> x) x 2",                  col(b, add_x, add_x, add_x, add_x, add_x, add_x,    mov_x_d, mov_x_d));
-
-	t.put("adc // mov.d (d -> x)",                          col(b, adc_x,                                       mov_x_d));
-	t.put("adc x 2 // mov.d (d -> x)",                      col(b, adc_x, adc_x,                                mov_x_d));
-	t.put("adc x 3 // mov.d (d -> x)",                      col(b, adc_x, adc_x, adc_x,                         mov_x_d));
-	t.put("adc // mov.d (d -> x) x 2",                      col(b, adc_x,                                       mov_x_d, mov_x_d));
-	t.put("adc x 2 // mov.d (d -> x) x 2",                  col(b, adc_x, adc_x,                                mov_x_d, mov_x_d));
-	t.put("adc x 3 // mov.d (d -> x) x 2",                  col(b, adc_x, adc_x, adc_x,                         mov_x_d, mov_x_d));
-	t.put("mul // mov.d (d -> x) x 2",                      col(b, mul_x,                                       mov_x_d, mov_x_d));
-	t.put("mul x 2 // mov.d (d -> x) x 2",                  col(b, mul_x, mul_x,                                mov_x_d, mov_x_d));
-	t.put("add.b x 2 // mov.d (d -> x) x 2",                col(b, add_v, add_v,                                mov_x_d, mov_x_d));
-	t.put("add.b x 3 // mov.d (d -> x) x 2",                col(b, add_v, add_v, add_v,                         mov_x_d, mov_x_d));
-	t.put("add.b x 4 // mov.d (d -> x) x 2",                col(b, add_v, add_v, add_v, add_v,                  mov_x_d, mov_x_d));
+	t.put("add.b x 4 // fmov.d (x -> d) x 4",               col(b, add_v, add_v, add_v, add_v,                  fmov_d_x, fmov_d_x, fmov_d_x, fmov_d_x));
 
 	{
 	memmgr m_h(mem_init( p ));
@@ -746,6 +767,86 @@ void bench_cap_transfer(bool md, double freq) {
 	t.put("str.q x 2 // fmov.d (x -> d) x 3",               col(h, str_q_s_x28, str_q_s_x28,                    fmov_d_x, fmov_d_x, fmov_d_x));
 	}
 
+	/* x -> d w/ broadcasting */
+	t.put("add.b x 2 // dup.d (x -> v.d) x 3",              col(b, add_v, add_v,                                dup_d_x, dup_d_x, dup_d_x));
+	t.put("add.b x 2 // dup.d (x -> v.d) x 4",              col(b, add_v, add_v,                                dup_d_x, dup_d_x, dup_d_x, dup_d_x));
+	t.put("add.b x 3 // dup.d (x -> v.d) x 3",              col(b, add_v, add_v, add_v,                         dup_d_x, dup_d_x, dup_d_x));
+	t.put("add.b x 3 // dup.d (x -> v.d) x 4",              col(b, add_v, add_v, add_v,                         dup_d_x, dup_d_x, dup_d_x, dup_d_x));
+	t.put("add.b x 4 // dup.d (x -> v.d) x 3",              col(b, add_v, add_v, add_v, add_v,                  dup_d_x, dup_d_x, dup_d_x));
+	t.put("add.b x 4 // dup.d (x -> v.d) x 4",              col(b, add_v, add_v, add_v, add_v,                  dup_d_x, dup_d_x, dup_d_x, dup_d_x));
+
+	/* flag x -> d */
+	{
+	memmgr m_h(mem_init( p ));
+	bench_col h(freq, m_h.ptr(), m_h.ptr());
+	t.put("ldr x 3 // (adds -> fcsel.s) x 2",               col(h, ldr_x_s, ldr_x_s, ldr_x_s,                   adds_fcsel_s, adds_fcsel_s));
+	t.put("ldr.q x 3 // (adds -> fcsel.s) x 2",             col(h, ldr_q_s, ldr_q_s, ldr_q_s,                   adds_fcsel_s, adds_fcsel_s));
+	t.put("ldr x 3 // (adds -> fcsel.s) x 3",               col(h, ldr_x_s, ldr_x_s, ldr_x_s,                   adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+	t.put("ldr.q x 3 // (adds -> fcsel.s) x 3",             col(h, ldr_q_s, ldr_q_s, ldr_q_s,                   adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+
+	t.put("str x 2 // (adds -> fcsel.s) x 2",               col(h, str_x_s, str_x_s,                            adds_fcsel_s, adds_fcsel_s));
+	t.put("str.q x 2 // (adds -> fcsel.s) x 2",             col(h, str_q_s, str_q_s,                            adds_fcsel_s, adds_fcsel_s));
+	t.put("str x 2 // (adds -> fcsel.s) x 3",               col(h, str_x_s, str_x_s,                            adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+	t.put("str.q x 2 // (adds -> fcsel.s) x 3",             col(h, str_q_s, str_q_s,                            adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+	}
+
+	t.put("add x 3 // (adds -> fcsel.s) x 2",               col(b, add_x, add_x, add_x,                         adds_fcsel_s, adds_fcsel_s));
+	t.put("add x 3 // (adds -> fcsel.s) x 3",               col(b, add_x, add_x, add_x,                         adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+	t.put("add x 4 // (adds -> fcsel.s) x 2",               col(b, add_x, add_x, add_x, add_x,                  adds_fcsel_s, adds_fcsel_s));
+	t.put("add x 4 // (adds -> fcsel.s) x 3",               col(b, add_x, add_x, add_x, add_x,                  adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+
+	t.put("add.b x 3 // (adds -> fcsel.s) x 2",             col(b, add_v, add_v, add_v,                         adds_fcsel_s, adds_fcsel_s));
+	t.put("add.b x 3 // (adds -> fcsel.s) x 3",             col(b, add_v, add_v, add_v,                         adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+	t.put("add.b x 4 // (adds -> fcsel.s) x 2",             col(b, add_v, add_v, add_v, add_v,                  adds_fcsel_s, adds_fcsel_s));
+	t.put("add.b x 4 // (adds -> fcsel.s) x 3",             col(b, add_v, add_v, add_v, add_v,                  adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+
+	t.put("fmov.d (x -> d) x 3 // (adds -> fcsel.s) x 2",   col(b, fmov_d_x, fmov_d_x, fmov_d_x,                adds_fcsel_s, adds_fcsel_s));
+	t.put("fmov.d (x -> d) x 3 // (adds -> fcsel.s) x 3",   col(b, fmov_d_x, fmov_d_x, fmov_d_x,                adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+	t.put("fmov.d (x -> d) x 4 // (adds -> fcsel.s) x 2",   col(b, fmov_d_x, fmov_d_x, fmov_d_x, fmov_d_x,      adds_fcsel_s, adds_fcsel_s));
+	t.put("fmov.d (x -> d) x 4 // (adds -> fcsel.s) x 3",   col(b, fmov_d_x, fmov_d_x, fmov_d_x, fmov_d_x,      adds_fcsel_s, adds_fcsel_s, adds_fcsel_s));
+
+	/* d -> x */
+	t.put("add // mov.d (d -> x)",                          col(b, add_x,                                       mov_x_d));
+	t.put("add x 2 // mov.d (d -> x)",                      col(b, add_x, add_x,                                mov_x_d));
+	t.put("add x 3 // mov.d (d -> x)",                      col(b, add_x, add_x, add_x,                         mov_x_d));
+	t.put("add x 4 // mov.d (d -> x)",                      col(b, add_x, add_x, add_x, add_x,                  mov_x_d));
+	t.put("add x 5 // mov.d (d -> x)",                      col(b, add_x, add_x, add_x, add_x, add_x,           mov_x_d));
+	t.put("add x 6 // mov.d (d -> x)",                      col(b, add_x, add_x, add_x, add_x, add_x, add_x,    mov_x_d));
+
+	t.put("add // mov.d (d -> x) x 2",                      col(b, add_x,                                       mov_x_d, mov_x_d));
+	t.put("add x 2 // mov.d (d -> x) x 2",                  col(b, add_x, add_x,                                mov_x_d, mov_x_d));
+	t.put("add x 3 // mov.d (d -> x) x 2",                  col(b, add_x, add_x, add_x,                         mov_x_d, mov_x_d));
+	t.put("add x 4 // mov.d (d -> x) x 2",                  col(b, add_x, add_x, add_x, add_x,                  mov_x_d, mov_x_d));
+	t.put("add x 5 // mov.d (d -> x) x 2",                  col(b, add_x, add_x, add_x, add_x, add_x,           mov_x_d, mov_x_d));
+	t.put("add x 6 // mov.d (d -> x) x 2",                  col(b, add_x, add_x, add_x, add_x, add_x, add_x,    mov_x_d, mov_x_d));
+
+	t.put("add // mov.d (d -> x) x 3",                      col(b, add_x,                                       mov_x_d, mov_x_d, mov_x_d));
+	t.put("add x 2 // mov.d (d -> x) x 3",                  col(b, add_x, add_x,                                mov_x_d, mov_x_d, mov_x_d));
+	t.put("add x 3 // mov.d (d -> x) x 3",                  col(b, add_x, add_x, add_x,                         mov_x_d, mov_x_d, mov_x_d));
+	t.put("add x 4 // mov.d (d -> x) x 3",                  col(b, add_x, add_x, add_x, add_x,                  mov_x_d, mov_x_d, mov_x_d));
+	t.put("add x 5 // mov.d (d -> x) x 3",                  col(b, add_x, add_x, add_x, add_x, add_x,           mov_x_d, mov_x_d, mov_x_d));
+
+	t.put("adc // mov.d (d -> x)",                          col(b, adc_x,                                       mov_x_d));
+	t.put("adc x 2 // mov.d (d -> x)",                      col(b, adc_x, adc_x,                                mov_x_d));
+	t.put("adc x 3 // mov.d (d -> x)",                      col(b, adc_x, adc_x, adc_x,                         mov_x_d));
+	t.put("adc // mov.d (d -> x) x 2",                      col(b, adc_x,                                       mov_x_d, mov_x_d));
+	t.put("adc x 2 // mov.d (d -> x) x 2",                  col(b, adc_x, adc_x,                                mov_x_d, mov_x_d));
+	t.put("adc x 3 // mov.d (d -> x) x 2",                  col(b, adc_x, adc_x, adc_x,                         mov_x_d, mov_x_d));
+	t.put("mul // mov.d (d -> x) x 2",                      col(b, mul_x,                                       mov_x_d, mov_x_d));
+	t.put("mul x 2 // mov.d (d -> x) x 2",                  col(b, mul_x, mul_x,                                mov_x_d, mov_x_d));
+
+	t.put("add.b x 2 // mov.d (d -> x) x 2",                col(b, add_v, add_v,                                mov_x_d, mov_x_d));
+	t.put("add.b x 3 // mov.d (d -> x) x 2",                col(b, add_v, add_v, add_v,                         mov_x_d, mov_x_d));
+	t.put("add.b x 4 // mov.d (d -> x) x 2",                col(b, add_v, add_v, add_v, add_v,                  mov_x_d, mov_x_d));
+
+	t.put("add.b x 2 // fmov.d (d -> x) x 2",               col(b, add_v, add_v,                                fmov_x_d, fmov_x_d));
+	t.put("add.b x 3 // fmov.d (d -> x) x 2",               col(b, add_v, add_v, add_v,                         fmov_x_d, fmov_x_d));
+	t.put("add.b x 4 // fmov.d (d -> x) x 2",               col(b, add_v, add_v, add_v, add_v,                  fmov_x_d, fmov_x_d));
+
+	t.put("add.b x 2 // mov.d (d[1] -> x) x 2",             col(b, add_v, add_v,                                mov_x_d1, mov_x_d1));
+	t.put("add.b x 3 // mov.d (d[1] -> x) x 2",             col(b, add_v, add_v, add_v,                         mov_x_d1, mov_x_d1));
+	t.put("add.b x 4 // mov.d (d[1] -> x) x 2",             col(b, add_v, add_v, add_v, add_v,                  mov_x_d1, mov_x_d1));
+
 	{
 	memmgr m_h(mem_init( p ));
 	bench_col h(freq, m_h.ptr(), m_h.ptr());
@@ -755,17 +856,55 @@ void bench_cap_transfer(bool md, double freq) {
 	t.put("str.q x 2 // mov.d (d -> x) x 2",                col(h, str_q_s, str_q_s,                            mov_x_d, mov_x_d));
 	}
 
+	/* flag d -> x */
+	t.put("(fcmp -> adc)",                                  col(b, fcmp_0_adc_x));
+	t.put("(fcmp -> adc) // mov.d (d -> x)",                col(b, fcmp_0_adc_x,                                mov_x_d));
+	t.put("(fcmp -> adc) x 2 // mov.d (d -> x)",            col(b, fcmp_0_adc_x, fcmp_0_adc_x,                  mov_x_d));
+	t.put("(fcmp -> adc) x 3 // mov.d (d -> x)",            col(b, fcmp_0_adc_x, fcmp_0_adc_x, fcmp_0_adc_x,    mov_x_d));
+	t.put("(fcmp -> adc) // mov.d (d -> x) x 2",            col(b, fcmp_0_adc_x,                                mov_x_d, mov_x_d));
+	t.put("(fcmp -> adc) x 2 // mov.d (d -> x) x 2",        col(b, fcmp_0_adc_x, fcmp_0_adc_x,                  mov_x_d, mov_x_d));
+	t.put("(fcmp -> adc) x 3 // mov.d (d -> x) x 2",        col(b, fcmp_0_adc_x, fcmp_0_adc_x, fcmp_0_adc_x,    mov_x_d, mov_x_d));
+
 	/*
 	 * fcvtas, fcvtau, scvtf, fcsel, fcmp, fccmp, frecpe, fsqrt
 	 */
+	t.put("add.b x 2 // fcvtas.s (s -> s) x 2",             col(b, add_v, add_v,                                fcvtas_s, fcvtas_s));
+	t.put("add.b x 3 // fcvtas.s (s -> s) x 2",             col(b, add_v, add_v, add_v,                         fcvtas_s, fcvtas_s));
+	t.put("add.b x 4 // fcvtas.s (s -> s) x 2",             col(b, add_v, add_v, add_v, add_v,                  fcvtas_s, fcvtas_s));
+	t.put("add.b // fcvtas.s (s -> s) x 3",                 col(b, add_v,                                       fcvtas_s, fcvtas_s, fcvtas_s));
+	t.put("add.b x 2 // fcvtas.s (s -> s) x 3",             col(b, add_v, add_v,                                fcvtas_s, fcvtas_s, fcvtas_s));
+
+	t.put("add.b x 2 // fcvtas.s (s -> x)",                 col(b, add_v, add_v,                                fcvtas_x));
+	t.put("add.b x 3 // fcvtas.s (s -> x)",                 col(b, add_v, add_v, add_v,                         fcvtas_x));
+	t.put("add.b x 4 // fcvtas.s (s -> x)",                 col(b, add_v, add_v, add_v, add_v,                  fcvtas_x));
+
+	t.put("add.b x 2 // fcvtas.s (s -> x) x 2",             col(b, add_v, add_v,                                fcvtas_x, fcvtas_x));
+	t.put("add.b x 3 // fcvtas.s (s -> x) x 2",             col(b, add_v, add_v, add_v,                         fcvtas_x, fcvtas_x));
+	t.put("add.b x 4 // fcvtas.s (s -> x) x 2",             col(b, add_v, add_v, add_v, add_v,                  fcvtas_x, fcvtas_x));
+
+	t.put("add x 4 // fcvtas.s (s -> x)",                   col(b, add_x, add_x, add_x, add_x,                  fcvtas_x));
+	t.put("add x 5 // fcvtas.s (s -> x)",                   col(b, add_x, add_x, add_x, add_x, add_x,           fcvtas_x));
+	t.put("add x 6 // fcvtas.s (s -> x)",                   col(b, add_x, add_x, add_x, add_x, add_x, add_x,    fcvtas_x));
+
+	t.put("add x 4 // fcvtas.s (s -> x) x 2",               col(b, add_x, add_x, add_x, add_x,                  fcvtas_x, fcvtas_x));
+	t.put("add x 5 // fcvtas.s (s -> x) x 2",               col(b, add_x, add_x, add_x, add_x, add_x,           fcvtas_x, fcvtas_x));
+	t.put("add x 6 // fcvtas.s (s -> x) x 2",               col(b, add_x, add_x, add_x, add_x, add_x, add_x,    fcvtas_x, fcvtas_x));
+
+	t.put("adc // fcvtas.s (s -> x)",                       col(b, adc_x,                                       fcvtas_x));
+	t.put("adc x 2 // fcvtas.s (s -> x)",                   col(b, adc_x, adc_x,                                fcvtas_x));
+	t.put("adc x 3 // fcvtas.s (s -> x)",                   col(b, adc_x, adc_x, adc_x,                         fcvtas_x));
+
+	t.put("adc // fcvtas.s (s -> x) x 2",                   col(b, adc_x,                                       fcvtas_x, fcvtas_x));
+	t.put("adc x 2 // fcvtas.s (s -> x) x 2",               col(b, adc_x, adc_x,                                fcvtas_x, fcvtas_x));
+	t.put("adc x 3 // fcvtas.s (s -> x) x 2",               col(b, adc_x, adc_x, adc_x,                         fcvtas_x, fcvtas_x));
+
 	{
 	memmgr m_h(mem_init( p ));
 	bench_col h(freq, m_h.ptr(), m_h.ptr());
-	t.put("add.b x 2 // fcvtas.s (s -> x) x 2",             col(h, add_v, add_v,                                fcvtas_s, fcvtas_s));
-	t.put("add.b x 3 // fcvtas.s (s -> x) x 2",             col(h, add_v, add_v, add_v,                         fcvtas_s, fcvtas_s));
-	t.put("add.b x 4 // fcvtas.s (s -> x) x 2",             col(h, add_v, add_v, add_v, add_v,                  fcvtas_s, fcvtas_s));
-	t.put("add.b // fcvtas.s (s -> x) x 3",                 col(h, add_v,                                       fcvtas_s, fcvtas_s, fcvtas_s));
-	t.put("add.b x 2 // fcvtas.s (s -> x) x 3",             col(h, add_v, add_v,                                fcvtas_s, fcvtas_s, fcvtas_s));
+	t.put("ldr x 3 // fcvtas.s (s -> s) x 2",               col(h, ldr_x_s, ldr_x_s, ldr_x_s,                   fcvtas_s, fcvtas_s));
+	t.put("ldr.q x 3 // fcvtas.s (s -> s) x 2",             col(h, ldr_q_s, ldr_q_s, ldr_q_s,                   fcvtas_s, fcvtas_s));
+	t.put("str x 2 // fcvtas.s (s -> s) x 2",               col(h, str_x_s, str_x_s,                            fcvtas_s, fcvtas_s));
+	t.put("str.q x 2 // fcvtas.s (s -> s) x 2",             col(h, str_q_s, str_q_s,                            fcvtas_s, fcvtas_s));
 	}
 
 	{
@@ -776,6 +915,30 @@ void bench_cap_transfer(bool md, double freq) {
 	t.put("str x 2 // fcvtas.s (s -> x) x 2",               col(h, str_x_s, str_x_s,                            fcvtas_s, fcvtas_s));
 	t.put("str.q x 2 // fcvtas.s (s -> x) x 2",             col(h, str_q_s, str_q_s,                            fcvtas_s, fcvtas_s));
 	}
+
+	t.put("add.b x 2 // scvtf.s (x -> s)",                  col(b, add_v, add_v,                                scvtf_w));
+	t.put("add.b x 3 // scvtf.s (x -> s)",                  col(b, add_v, add_v, add_v,                         scvtf_w));
+	t.put("add.b x 4 // scvtf.s (x -> s)",                  col(b, add_v, add_v, add_v, add_v,                  scvtf_w));
+
+	t.put("add.b x 2 // scvtf.s (x -> s) x 2",              col(b, add_v, add_v,                                scvtf_w, scvtf_w));
+	t.put("add.b x 3 // scvtf.s (x -> s) x 2",              col(b, add_v, add_v, add_v,                         scvtf_w, scvtf_w));
+	t.put("add.b x 4 // scvtf.s (x -> s) x 2",              col(b, add_v, add_v, add_v, add_v,                  scvtf_w, scvtf_w));
+
+	t.put("add x 4 // scvtf.s (x -> s)",                    col(b, add_x, add_x, add_x, add_x,                  scvtf_w));
+	t.put("add x 5 // scvtf.s (x -> s)",                    col(b, add_x, add_x, add_x, add_x, add_x,           scvtf_w));
+	t.put("add x 6 // scvtf.s (x -> s)",                    col(b, add_x, add_x, add_x, add_x, add_x, add_x,    scvtf_w));
+
+	t.put("add x 4 // scvtf.s (x -> s) x 2",                col(b, add_x, add_x, add_x, add_x,                  scvtf_w, scvtf_w));
+	t.put("add x 5 // scvtf.s (x -> s) x 2",                col(b, add_x, add_x, add_x, add_x, add_x,           scvtf_w, scvtf_w));
+	t.put("add x 6 // scvtf.s (x -> s) x 2",                col(b, add_x, add_x, add_x, add_x, add_x, add_x,    scvtf_w, scvtf_w));
+
+	t.put("adc // scvtf.s (x -> s)",                        col(b, adc_x,                                       scvtf_w));
+	t.put("adc x 2 // scvtf.s (x -> s)",                    col(b, adc_x, adc_x,                                scvtf_w));
+	t.put("adc x 3 // scvtf.s (x -> s)",                    col(b, adc_x, adc_x, adc_x,                         scvtf_w));
+
+	t.put("adc // scvtf.s (x -> s) x 2",                    col(b, adc_x,                                       scvtf_w, scvtf_w));
+	t.put("adc x 2 // scvtf.s (x -> s) x 2",                col(b, adc_x, adc_x,                                scvtf_w, scvtf_w));
+	t.put("adc x 3 // scvtf.s (x -> s) x 2",                col(b, adc_x, adc_x, adc_x,                         scvtf_w, scvtf_w));
 
 	{
 	memmgr m_h(mem_init( p ));
@@ -809,15 +972,128 @@ void bench_cap_transfer(bool md, double freq) {
 	t.put("scvtf.s (x -> s) x 2 // fcvtas.s (s -> x)",      col(h, scvtf_w, scvtf_w,                            fcvtas_s));
 	t.put("scvtf.s (x -> s) x 2 // fcvtas.s (s -> x) x 2",  col(h, scvtf_w, scvtf_w,                            fcvtas_s, fcvtas_s));
 	t.put("scvtf.s (x -> s) x 3 // fcvtas.s (s -> x)",      col(h, scvtf_w, scvtf_w, scvtf_w,                   fcvtas_s));
-
-	t.put("frecpe.s (scl) // frsqrte.s (scl)",              col(h, frecpe_s,  frsqrte_s));
-	t.put("frecpe.s (scl) // fcmp.s",                       col(h, frecpe_s,  fcmp_s));
-	t.put("frsqrte.s (scl) // fcmp.s",                      col(h, frsqrte_s, fcmp_s));
 	}
 	return;
 }
 
+#if 0
+/* crypto */
+op_col_fn(sha1c_v,             ({ g->sha1c(s->q, s->s, s->v.s); }) )
+op_col_fn(sha1h_v,             ({ g->sha1h(s->s, s->s); }) )
+op_col_fn(sha1m_v,             ({ g->sha1m(s->q, s->s, s->v.s); }) )
+op_col_fn(sha1p_v,             ({ g->sha1p(s->q, s->s, s->v.s); }) )
+op_col_fn(sha1su0_v,           ({ g->sha1su0(s->v.s, s->v.s, s->v.s); }) )
+op_col_fn(sha1su1_v,           ({ g->sha1su1(s->v.s, s->v.s); }) )
+
+op_col_fn(sha256h_v,           ({ g->sha256h(s->q, s->q, s->v.s); }) )
+op_col_fn(sha256h2_v,          ({ g->sha256h2(s->q, s->q, s->v.s); }) )
+op_col_fn(sha256su0_v,         ({ g->sha256su0(s->v.s, s->v.s); }) )
+op_col_fn(sha256su1_v,         ({ g->sha256su1(s->v.s, s->v.s, s->v.s); }) )
+#endif
+
+static
+void bench_cap_crypto(bool md, double freq) {
+	table t(md, "SIMD / fp", 1, 20);
+	bench_col b(freq);
+
+	t.put("sha1c",                                          col(b, sha1c_v));
+	t.put("sha1h",                                          col(b, sha1h_v));
+	t.put("sha1su0",                                        col(b, sha1su0_v));
+	t.put("sha256h",                                        col(b, sha256h_v));
+	t.put("sha256su0",                                      col(b, sha256su0_v));
+
+	t.put("sha1h // add.b x 2",                             col(b, sha1h_v,                                     add_v, add_v));
+	t.put("sha1h // add.b x 3",                             col(b, sha1h_v,                                     add_v, add_v, add_v));
+	t.put("sha1h // add.b x 4",                             col(b, sha1h_v,                                     add_v, add_v, add_v, add_v));
+
+	/*
+	t.put("sha1c // add.b x 2",                             col(b, sha1c_v,                                     add_v, add_v));
+	t.put("sha1c // add.b x 3",                             col(b, sha1c_v,                                     add_v, add_v, add_v));
+	t.put("sha1c // add.b x 4",                             col(b, sha1c_v,                                     add_v, add_v, add_v, add_v));
+	*/
+
+	t.put("sha1h // sha1c",                                 col(b, sha1h_v,                                     sha1c_v));
+	t.put("sha1h x 2 // sha1c",                             col(b, sha1h_v, sha1h_v,                            sha1c_v));
+	t.put("sha1h x 3 // sha1c",                             col(b, sha1h_v, sha1h_v, sha1h_v,                   sha1c_v));
+	t.put("sha1h x 4 // sha1c",                             col(b, sha1h_v, sha1h_v, sha1h_v, sha1h_v,          sha1c_v));
+
+	t.put("sha1h // sha256h",                               col(b, sha1h_v,                                     sha256h_v));
+	t.put("sha1h x 2 // sha256h",                           col(b, sha1h_v, sha1h_v,                            sha256h_v));
+	t.put("sha1h x 3 // sha256h",                           col(b, sha1h_v, sha1h_v, sha1h_v,                   sha256h_v));
+	t.put("sha1h x 4 // sha256h",                           col(b, sha1h_v, sha1h_v, sha1h_v, sha1h_v,          sha256h_v));
+
+	t.put("sha1h // sha256su0",                             col(b, sha1h_v,                                     sha256su0_v));
+	t.put("sha1h x 2 // sha256su0",                         col(b, sha1h_v, sha1h_v,                            sha256su0_v));
+	t.put("sha1h x 3 // sha256su0",                         col(b, sha1h_v, sha1h_v, sha1h_v,                   sha256su0_v));
+	t.put("sha1h x 4 // sha256su0",                         col(b, sha1h_v, sha1h_v, sha1h_v, sha1h_v,          sha256su0_v));
+
+	t.put("sha256su0 // sha256h",                           col(b, sha256su0_v,                                 sha256h_v));
+	t.put("sha256su0 x 2 // sha256h",                       col(b, sha256su0_v, sha256su0_v,                    sha256h_v));
+	t.put("sha256su0 x 3 // sha256h",                       col(b, sha256su0_v, sha256su0_v, sha256su0_v,       sha256h_v));
+
+	t.put("sha1c // sha256h",                               col(b, sha1c_v,                                     sha256h_v));
+	t.put("sha1c // sha256h x 2",                           col(b, sha1c_v,                                     sha256h_v, sha256h_v));
+	t.put("sha1c // sha256h x 3",                           col(b, sha1c_v,                                     sha256h_v, sha256h_v, sha256h_v));
+	t.put("sha1c // sha256h x 4",                           col(b, sha1c_v,                                     sha256h_v, sha256h_v, sha256h_v, sha256h_v));
+	t.put("sha1c // sha256h x 5",                           col(b, sha1c_v,                                     sha256h_v, sha256h_v, sha256h_v, sha256h_v, sha256h_v));
+
+	t.put("sha1c // sha256su0",                             col(b, sha1c_v,                                     sha256su0_v));
+	t.put("sha1c // sha256su0 x 2",                         col(b, sha1c_v,                                     sha256su0_v, sha256su0_v));
+	t.put("sha1c // sha256su0 x 3",                         col(b, sha1c_v,                                     sha256su0_v, sha256su0_v, sha256su0_v));
+	t.put("sha1c // sha256su0 x 4",                         col(b, sha1c_v,                                     sha256su0_v, sha256su0_v, sha256su0_v, sha256su0_v));
+	t.put("sha1c // sha256su0 x 5",                         col(b, sha1c_v,                                     sha256su0_v, sha256su0_v, sha256su0_v, sha256su0_v, sha256su0_v));
+
+	t.put("fcmp.s // fcsel.s",                              col(b, fcmp_0,                                      fcsel_s));
+	t.put("fcmp.s // fcsel.s x 2",                          col(b, fcmp_0,                                      fcsel_s, fcsel_s));
+
+	t.put("sha1h // fcmp.s",                                col(b, sha1h_v,                                     fcmp_s));
+	t.put("sha1h // fcsel.s",                               col(b, sha1h_v,                                     fcsel_s));
+	t.put("sha1h // fcsel.s x 2",                           col(b, sha1h_v,                                     fcsel_s, fcsel_s));
+	t.put("sha1h // fcsel.s x 3",                           col(b, sha1h_v,                                     fcsel_s, fcsel_s, fcsel_s));
+
+	t.put("add.b // fcmp.s",                                col(b, add_v,                                       fcmp_0));
+	t.put("add.b x 2 // fcmp.s",                            col(b, add_v, add_v,                                fcmp_0));
+	t.put("add.b x 3 // fcmp.s",                            col(b, add_v, add_v, add_v,                         fcmp_0));
+	t.put("add.b x 4 // fcmp.s",                            col(b, add_v, add_v, add_v, add_v,                  fcmp_0));
+
+	t.put("add.b // fcsel.s",                               col(b, add_v,                                       fcsel_s));
+	t.put("add.b x 2 // fcsel.s",                           col(b, add_v, add_v,                                fcsel_s));
+	t.put("add.b x 3 // fcsel.s",                           col(b, add_v, add_v, add_v,                         fcsel_s));
+	t.put("add.b x 4 // fcsel.s",                           col(b, add_v, add_v, add_v, add_v,                  fcsel_s));
+
+	t.put("fjcvtzs.d (s -> x) // fcmp.s",                   col(b, fjcvtzs_d,                                   fcmp_0));
+	t.put("fcvtas.s (s -> x) // fcmp.s",                    col(b, fcvtas_s,                                    fcmp_0));
+	t.put("fcvtas.s (s -> x) x 2 // fcmp.s",                col(b, fcvtas_s, fcvtas_s,                          fcmp_0));
+
+	t.put("fcvtas.s (s -> x) // fcsel.s",                   col(b, fcvtas_s,                                    fcsel_s));
+	t.put("fcvtas.s (s -> x) x 2 // fcsel.s",               col(b, fcvtas_s, fcvtas_s,                          fcsel_s));
+	t.put("fcvtas.s (s -> x) x 2 // fcsel.s",               col(b, fcvtas_s, fcvtas_s,                          fcsel_s));
+
+
+	t.put("frecpe.s (scl) // frsqrte.s (scl)",              col(b, frecpe_s,  frsqrte_s));
+	t.put("frecpe.s (scl) // fcmp.s",                       col(b, frecpe_s,  fcmp_s));
+	t.put("frsqrte.s (scl) // fcmp.s",                      col(b, frsqrte_s, fcmp_s));
+
+	t.put("frecpe.s (scl) // frsqrte.s (scl)",              col(b, frecpe_s,  frsqrte_s));
+	t.put("frecpe.s (scl) // fcmp.s",                       col(b, frecpe_s,  fcmp_s));
+	t.put("frsqrte.s (scl) // fcmp.s",                      col(b, frsqrte_s, fcmp_s));
+	return;
+}
+
+static
+void bench_cap_div(bool md, double freq) {
+	table t(md, "crypto", 1, 20);
+	bench_col b(freq);
+
+
+
+	return;
+}
+
 void bench_port_cap(bool md, double freq) {
+	bench_cap_crypto(md, freq);
+
+
 	bench_cap_transfer(md, freq);
 	bench_cap_base(md, freq);
 	bench_cap_load_store(md, freq);

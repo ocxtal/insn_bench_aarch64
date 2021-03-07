@@ -60,6 +60,8 @@ int main(void) {
 	#endif
 
 	bench_port_cap(md, freq);
+	bench_mov(md, freq);
+
 	bench_load(md, freq);
 	bench_store(md, freq);
 	bench_branch(md, freq);

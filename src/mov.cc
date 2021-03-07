@@ -13,7 +13,9 @@ void bench_mov(bool md, double freq) {
 	/* decoder / allocation throughput */
 	t.put("nop",                            thr(b,  op( g->nop() )));
 	t.put("mov (x -> x)",                   both(b, op( g->mov(d->x, s->x) )));
+	t.put("mov (x -> x; chain)",            thr(b,  op( g->mov(d->x, s->x) ),     lat_patterns));
 	t.put("mov (v.b -> v.b)",               both(b, op( g->mov(d->v.b, s->v.b) )));
+	t.put("mov (v.b -> v.b; chain)",        thr(b,  op( g->mov(d->v.b, s->v.b) ), lat_patterns));
 
 	/* immediate */
 	t.put("mov / movz (imm; 0x00)",         thr(b,  op( g->mov(d->x, 0x00) )));
