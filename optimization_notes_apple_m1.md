@@ -9,7 +9,7 @@ The most helpful articles were by AnandTech, delivering detailed reviews on the 
 * [The 2020 Mac Mini Unleashed: Putting Apple Silicon M1 To The Test](https://www.anandtech.com/show/16252/mac-mini-apple-m1-tested)
 * [Apple Announces The Apple Silicon M1: Ditching x86 - What to Expect, Based on A14](https://www.anandtech.com/show/16226/apple-silicon-m1-a14-deep-dive)
 
-Also, I found Dougall Jhonson provides a detailed investigation on the pipeline on [his website](https://dougallj.github.io/applecpu/firestorm.html). Several explanations are different from my understanding, but I believe he is doing a more accurate investigation than me. So please refer to his article as well.
+Also, I found Dougall Johnson provides a detailed investigation on the pipeline on [his website](https://dougallj.github.io/applecpu/firestorm.html). Several explanations are different from my understanding, but I believe he is doing a more accurate investigation than me. So please refer to his article as well.
 
 ## Decoder and renamer
 
