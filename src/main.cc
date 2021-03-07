@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include "utils.h"
 
-void bench_port_cap(bool md, double freq);
 void bench_load(bool md, double freq);
 void bench_store(bool md, double freq);
 void bench_branch(bool md, double freq);
@@ -36,8 +35,8 @@ void bench_conv_fp_vec(bool md, double freq);
 
 #define DEBUG
 
-int main(void) {
-	bool const md = true;
+int main(int argc, char *argv[]) {
+	bool const md = argc == 2 && std::strcmp(argv[1], "-m") == 0;
 	init(md, 8);
 
 	#ifdef DEBUG
@@ -58,9 +57,6 @@ int main(void) {
 	double const freq = estimate_cpu_freq(md, 3);
 
 	#endif
-
-	bench_port_cap(md, freq);
-	bench_mov(md, freq);
 
 	bench_load(md, freq);
 	bench_store(md, freq);
