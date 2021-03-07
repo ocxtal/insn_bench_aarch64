@@ -1080,25 +1080,13 @@ void bench_cap_crypto(bool md, double freq) {
 	return;
 }
 
-static
-void bench_cap_div(bool md, double freq) {
-	table t(md, "crypto", 1, 20);
-	bench_col b(freq);
-
-
-
-	return;
-}
-
 void bench_port_cap(bool md, double freq) {
-	bench_cap_crypto(md, freq);
-
-
-	bench_cap_transfer(md, freq);
 	bench_cap_base(md, freq);
-	bench_cap_load_store(md, freq);
-	bench_cap_branch(md, freq);
 	bench_cap_scalar(md, freq);
+	bench_cap_crypto(md, freq);
+	bench_cap_branch(md, freq);
+	bench_cap_load_store(md, freq);
+	bench_cap_transfer(md, freq);
 	return;
 }
 

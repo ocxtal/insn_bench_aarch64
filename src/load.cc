@@ -247,6 +247,7 @@ void bench_load_vec(bool md, double freq) {
 	#define fwd_lo(_g, _s, _d)		({ g->add((_s)->v.d, (_s)->v.d, (_g)->v28.d); (_g)->mov((_d)->x, (_s)->v.d[0]); (_g)->add((_d)->x, (_d)->x, (_g)->x28); })
 	#define fwd_hi(_g, _s, _d)		({ g->add((_s)->v.d, (_s)->v.d, (_g)->v28.d); (_g)->mov((_d)->x, (_s)->v.d[1]); (_g)->add((_d)->x, (_d)->x, (_g)->x28); })
 
+	/* FIXME; would be incorrect inferrence */
 	double const fmov_mov_add = lat(z, op( g->fmov(d->d, g->x0); g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, g->x28) )).lat;
 	double const fmov_fwd     = lat(z, op( g->fmov(d->d, s->x);  fwd_lo(g, d, s) )).lat;
 	double const fwd_latency  = floor(fmov_fwd - fmov_mov_add / 2.0 + 0.5);

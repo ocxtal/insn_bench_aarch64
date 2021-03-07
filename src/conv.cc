@@ -10,19 +10,21 @@ void bench_conv_fp_vec(bool md, double freq) {
 	table t(md, "Floating point convert");
 	bench b(freq);
 
-	/* FIXME */
-	// double const fmov_mov_add = lat(z, op( g->fmov(d->d, g->x0); g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, g->x28) )).lat;
-	// double const fmov_fwd     = lat(z, op( g->fmov(d->d, s->x);  fwd_lo(g, d, s) )).lat;
-	// double const fwd_latency  = floor(fmov_fwd - fmov_mov_add / 2.0 + 0.5);
-	double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
+	/* FIXME; would be incorrect inferrence */
+	#define fwd_lo(_g, _s, _d)		({ g->add((_s)->v.d, (_s)->v.d, (_g)->v28.d); (_g)->mov((_d)->x, (_s)->v.d[0]); (_g)->add((_d)->x, (_d)->x, (_g)->x28); })
+	double const fmov_mov_add = lat(b, op( g->fmov(d->d, g->x0); g->mov(d->x, d->v.d[0]); g->add(d->x, d->x, g->x28) )).lat;
+	double const fmov_fwd     = lat(b, op( g->fmov(d->d, s->x);  fwd_lo(g, d, s) )).lat;
+	double const fwd_latency  = floor(fmov_fwd - fmov_mov_add / 2.0 + 0.5);
+	double const mov_latency  = fmov_fwd - fwd_latency;
+	// double const mov_latency = lat_i(freq, op( g->mov(d->v.d[0], s->x); g->mov(d->x, d->v.d[0]) )) / 2.0;
 
 	/* scvtf has scalar -> fp transferring form */
-	t.put("scvtf.h (scl; >>2)",         both(b, op( g->scvtf(d->h, s->w, 2) ),                      op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf.s (scl; >>2)",         both(b, op( g->scvtf(d->s, s->w, 2) ),                      op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf.d (scl; >>2)",         both(b, op( g->scvtf(d->d, s->x, 2) ),                      op( g->mov(d->x, d->v.d[0]) ), mov_latency));
-	t.put("scvtf.h (scl; int)",         both(b, op( g->scvtf(d->h, s->w) ),                         op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf.s (scl; int)",         both(b, op( g->scvtf(d->s, s->w) ),                         op( g->mov(d->w, d->v.s[0]) ), mov_latency));
-	t.put("scvtf.d (scl; int)",         both(b, op( g->scvtf(d->d, s->x) ),                         op( g->mov(d->x, d->v.d[0]) ), mov_latency));
+	t.put("scvtf.h (scl; >>2)",         both(b, op( g->scvtf(d->h, s->w, 2) ),                      op( fwd_lo(g, d, d) ), fwd_latency));
+	t.put("scvtf.s (scl; >>2)",         both(b, op( g->scvtf(d->s, s->w, 2) ),                      op( fwd_lo(g, d, d) ), fwd_latency));
+	t.put("scvtf.d (scl; >>2)",         both(b, op( g->scvtf(d->d, s->x, 2) ),                      op( fwd_lo(g, d, d) ), fwd_latency));
+	t.put("scvtf.h (scl; int)",         both(b, op( g->scvtf(d->h, s->w) ),                         op( fwd_lo(g, d, d) ), fwd_latency));
+	t.put("scvtf.s (scl; int)",         both(b, op( g->scvtf(d->s, s->w) ),                         op( fwd_lo(g, d, d) ), fwd_latency));
+	t.put("scvtf.d (scl; int)",         both(b, op( g->scvtf(d->d, s->x) ),                         op( fwd_lo(g, d, d) ), fwd_latency));
 
 	t.put("scvtf.h (vec; >>2)",         both(b, op( g->scvtf(d->v.h, s->v.h, 2) )));
 	t.put("scvtf.s (vec; >>2)",         both(b, op( g->scvtf(d->v.s, s->v.s, 2) )));
