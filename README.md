@@ -11,7 +11,11 @@ $ ./insn_bench_aarch64 > result.txt               # dump in tsv, -m for dump in 
 
 ## Results
 
-The results on Apple M1 Firestorm is [here](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/apple_m1_firestorm.md). My brief notes on M1 code tuning is [here](https://github.com/ocxtal/insn_bench_aarch64/blob/master/optimization_notes_apple_m1.md).
+* [Apple M1 Firestorm](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/apple_m1_firestorm.md)
+* [aws Graviton 2](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/aws_graviton2.md)
+* [NXP LX2160A (Cortex-A72)](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/nxp_lx2160a_a72.md)
+
+My brief notes on M1 code tuning is [here](https://github.com/ocxtal/insn_bench_aarch64/blob/master/optimization_notes_apple_m1.md).
 
 ## Copyright and License
 
