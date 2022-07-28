@@ -14,7 +14,7 @@ $ ./insn_bench_aarch64 > result.txt               # dump in tsv, -m for dump in 
 * [Apple M1 Firestorm](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/apple_m1_firestorm.md)
 * [aws Graviton 3](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/aws_graviton3.md)
 * [aws Graviton 2](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/aws_graviton2.md)
-* [gcp Ampere Altra](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/gcp_ampere_altra.md)
+* [GCP Ampere Altra](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/gcp_ampere_altra.md)
 * [NXP LX2160A (Cortex-A72)](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/nxp_lx2160a_a72.md)
 
 My brief notes on M1 code tuning is [here](https://github.com/ocxtal/insn_bench_aarch64/blob/master/optimization_notes_apple_m1.md).
