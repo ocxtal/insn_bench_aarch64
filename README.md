@@ -12,6 +12,7 @@ $ ./insn_bench_aarch64 > result.txt               # dump in tsv, -m for dump in 
 ## Results
 
 * [Apple M1 Firestorm](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/apple_m1_firestorm.md)
+* [Snapdragon 8cx Gen3 (Cortex-X1)](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/snapdragon_8cx_gen3_x1.md)
 * [aws Graviton 3](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/aws_graviton3.md)
 * [aws Graviton 2](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/aws_graviton2.md)
 * [GCP Ampere Altra](https://github.com/ocxtal/insn_bench_aarch64/blob/master/results/gcp_ampere_altra.md)
