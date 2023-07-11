@@ -351,7 +351,8 @@ dec_thr(28, 1, 1, 120, 1);
 dec_thr(6, 4, 3, 40, 1);
 dec_thr(9, 3, 3, 40, 1);
 dec_thr(6, 4, 4, 30, 1);
-dec_thr(4, 7, 4, 30, 1);
+dec_thr(3, 7, 5, 30, 1);
+// dec_thr(4, 7, 4, 30, 1);
 dec_thr(6, 4, 5, 30, 1);
 dec_thr(6, 4, 6, 20, 1);
 // dec_thr(6, 4, 3, 40, 1);
@@ -370,13 +371,14 @@ static pattern_t const *thr_patterns[] = {
 	ptr_thr(24, 1, 1, 120, 1),
 	ptr_thr(25, 1, 1, 120, 1),
 	ptr_thr(27, 1, 1, 120, 1),
-	ptr_thr(28, 1, 1, 120, 1),
+	// ptr_thr(28, 1, 1, 120, 1),
 	ptr_thr(6, 4, 3, 40, 1),
 	ptr_thr(9, 3, 3, 40, 1),
 	ptr_thr(6, 4, 6, 20, 1),
 	ptr_thr(6, 4, 5, 30, 1),
 	ptr_thr(6, 4, 4, 30, 1),
-	ptr_thr(4, 7, 4, 30, 1),
+	ptr_thr(3, 7, 5, 30, 1),
+	// ptr_thr(4, 7, 4, 30, 1),
 	// ptr_thr(6, 4, 3, 40, 1),
 	// ptr_thr(4, 7, 5, 30, 1),
 #endif
@@ -408,23 +410,27 @@ static pattern_t const *thr_half_patterns[] = {
 };
 
 /* for ldp and ld{2,3,4} */
+dec_thr(21, 1, 1, 120, 2);
+dec_thr(22, 1, 1, 120, 2);
 dec_thr(24, 1, 1, 120, 2);
 dec_thr(25, 1, 1, 120, 2);
 dec_thr(26, 1, 1, 120, 2);
 dec_thr(27, 1, 1, 120, 2);
-dec_thr(28, 1, 1, 120, 2);
+// dec_thr(28, 1, 1, 120, 2);
 
 static pattern_t const *thr_skip2_patterns[] = {
+	ptr_thr(21, 1, 1, 120, 2),
 	ptr_thr(24, 1, 1, 120, 2),
 	ptr_thr(25, 1, 1, 120, 2),
 	ptr_thr(27, 1, 1, 120, 2),
-	ptr_thr(28, 1, 1, 120, 2),
+	// ptr_thr(28, 1, 1, 120, 2),
 	NULL
 };
 static pattern_t const *thr_skip2x_patterns[] = {
+	ptr_thr(22, 1, 1, 120, 2),
 	ptr_thr(24, 1, 1, 120, 2),
 	ptr_thr(26, 1, 1, 120, 2),
-	ptr_thr(28, 1, 1, 120, 2),
+	// ptr_thr(28, 1, 1, 120, 2),
 	NULL
 };
 
@@ -432,13 +438,14 @@ dec_thr(21, 1, 1, 120, 3);
 dec_thr(24, 1, 1, 120, 3);
 dec_thr(25, 1, 1, 120, 3);
 dec_thr(27, 1, 1, 120, 3);
-dec_thr(28, 1, 1, 120, 3);
+// dec_thr(28, 1, 1, 120, 3);
 
 static pattern_t const *thr_skip3_patterns[] = {
+	ptr_thr(21, 1, 1, 120, 3),
 	ptr_thr(24, 1, 1, 120, 3),
 	ptr_thr(25, 1, 1, 120, 3),
 	ptr_thr(27, 1, 1, 120, 3),
-	ptr_thr(28, 1, 1, 120, 3),
+	// ptr_thr(28, 1, 1, 120, 3),
 	NULL
 };
 static pattern_t const *thr_skip3x_patterns[] = {
@@ -449,22 +456,24 @@ static pattern_t const *thr_skip3x_patterns[] = {
 };
 
 dec_thr(20, 1, 1, 120, 4);
+dec_thr(21, 1, 1, 120, 4);
 dec_thr(24, 1, 1, 120, 4);
 dec_thr(25, 1, 1, 120, 4);
 dec_thr(27, 1, 1, 120, 4);
-dec_thr(28, 1, 1, 120, 4);
+// dec_thr(28, 1, 1, 120, 4);
 
 static pattern_t const *thr_skip4_patterns[] = {
+	ptr_thr(21, 1, 1, 120, 4),
 	ptr_thr(24, 1, 1, 120, 4),
 	ptr_thr(25, 1, 1, 120, 4),
 	ptr_thr(27, 1, 1, 120, 4),
-	ptr_thr(28, 1, 1, 120, 4),
+	// ptr_thr(28, 1, 1, 120, 4),
 	NULL
 };
 static pattern_t const *thr_skip4x_patterns[] = {
 	ptr_thr(20, 1, 1, 120, 4),
 	ptr_thr(24, 1, 1, 120, 4),
-	ptr_thr(28, 1, 1, 120, 4),
+	// ptr_thr(28, 1, 1, 120, 4),
 	NULL
 };
 
@@ -486,11 +495,11 @@ static pattern_t const *thr_skip6x_patterns[] = {
 
 dec_thr(14, 1, 1, 120, 7);
 dec_thr(21, 1, 1, 120, 7);
-dec_thr(28, 1, 1, 120, 7);
+// dec_thr(28, 1, 1, 120, 7);
 static pattern_t const *thr_skip7x_patterns[] = {
 	ptr_thr(14, 1, 1, 120, 7),
 	ptr_thr(21, 1, 1, 120, 7),
-	ptr_thr(28, 1, 1, 120, 7),
+	// ptr_thr(28, 1, 1, 120, 7),
 	NULL
 };
 
@@ -570,16 +579,18 @@ private:
 	AReg regs[36] = {
 		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7),
 		a(8),  a(9),  a(10), a(11), a(12), a(13), a(14), a(15),
-		a(16), a(17), a(18), a(19), a(20), a(21), a(22), a(23),
+		a(16), a(17), /*a(18),*/ a(19), a(20), a(21), a(22), a(23),
 		a(24), a(25), a(26), a(27),
-		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7)
+		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7),
+		a(8)
 	};
 	AReg const regs_rot[36] = {
 		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7),
 		a(8),  a(9),  a(10), a(11), a(12), a(13), a(14), a(15),
-		a(16), a(17), a(18), a(19), a(20), a(21), a(22), a(23),
+		a(16), a(17), /*a(18),*/ a(19), a(20), a(21), a(22), a(23),
 		a(24), a(25), a(26), a(27),
-		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7)
+		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7),
+		a(8)
 	};
 	AReg const regs_all[31] = {
 		a(0),  a(1),  a(2),  a(3),  a(4),  a(5),  a(6),  a(7),
