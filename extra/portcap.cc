@@ -350,7 +350,7 @@ void bench_cap_load_store(bool md, double freq) {
 		char buf[1024] = { 0 }; \
 		size_t const len = strlen((char const *)(_basename)); \
 		size_t const clip = len > 512 ? 512 : len; \
-		sprintf(buf, "%.*s (ofs = %zu)", (int)clip, (char const *)(_basename), (size_t)(_offset)); \
+		snprintf(buf, 1023, "%.*s (ofs = %zu)", (int)clip, (char const *)(_basename), (size_t)(_offset)); \
 		t.put(buf, col(h, __VA_ARGS__, (size_t)(_offset))); \
 	}
 	#define var_offset(_basename, ...) { \
@@ -545,7 +545,7 @@ void bench_cap_branch(bool md, double freq) {
 		char buf[1024] = { 0 }; \
 		size_t const len = strlen((char const *)(_basename)); \
 		size_t const clip = len > 512 ? 512 : len; \
-		sprintf(buf, "%.*s x %zu", (int)clip, (char const *)(_basename), (size_t)(_cnt)); \
+		snprintf(buf, 1023, "%.*s x %zu", (int)clip, (char const *)(_basename), (size_t)(_cnt)); \
 		t.put(buf, col(b, __VA_ARGS__, pp)); \
 	}
 	#define var_length(_basename, ...) { \
