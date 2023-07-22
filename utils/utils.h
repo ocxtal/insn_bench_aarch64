@@ -347,7 +347,7 @@ dec_thr(3, 8, 6, 20, 1);  dec_thr(4, 7, 6, 20, 1);  dec_thr(5, 5, 6, 20, 1);  de
 dec_thr(24, 1, 1, 120, 1);
 dec_thr(25, 1, 1, 120, 1);
 dec_thr(27, 1, 1, 120, 1);
-dec_thr(28, 1, 1, 120, 1);
+// dec_thr(28, 1, 1, 120, 1);
 dec_thr(6, 4, 3, 40, 1);
 dec_thr(9, 3, 3, 40, 1);
 dec_thr(6, 4, 4, 30, 1);
@@ -623,9 +623,9 @@ private:
 		mov(v31.b16, v1.b16);
 
 		/* initialize seed registers */
-		for(size_t i = 1; i < 28; i++) {
-			mov(regs_all[i].v.b16, v0.b16);
-			mov(regs_all[i].x, x0);
+		for(size_t i = 1; i < 27; i++) {
+			mov(regs[i].v.b16, v0.b16);
+			mov(regs[i].x, x0);
 		}
 		return;
 	}
