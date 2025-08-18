@@ -266,7 +266,12 @@ void bench_div_fp_vec(bool md, double freq) {
 	table t(md, "Floating point divide and reciprocal");
 	bench b(freq);
 
-	/* FIXME: fdiv */
+        t.put("fdiv.h (scl)",                       both(b, op( g->fdiv(d->h, d->h, s->h) )));
+        t.put("fdiv.s (scl)",                       both(b, op( g->fdiv(d->s, d->s, s->s) )));
+        t.put("fdiv.d (scl)",                       both(b, op( g->fdiv(d->d, d->d, s->d) )));
+        t.put("fdiv.h (vec)",                       both(b, op( g->fdiv(d->v.h, d->v.h, s->v.h) )));
+        t.put("fdiv.s (vec)",                       both(b, op( g->fdiv(d->v.s, d->v.s, s->v.s) )));
+        t.put("fdiv.d (vec)",                       both(b, op( g->fdiv(d->v.d, d->v.d, s->v.d) )));
 
 	t.put("frecpe.h (scl)",                     both(b, op( g->frecpe(d->h, s->h) )));
 	t.put("frecpe.s (scl)",                     both(b, op( g->frecpe(d->s, s->s) )));
